@@ -116,16 +116,43 @@
       background-size: 12px;
       appearance: none;
     }
+    /* 성경 목록 드롭다운 스타일 개선 (글자 수에 맞춰 자동 조정) */
+    #book {
+      width: auto;
+      min-width: 120px;
+      max-width: 180px;
+      padding: 6px 24px 6px 8px;
+      font-size: 14px;
+      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpolygon points='0,0 12,0 6,12' fill='%23333'/%3E%3C/svg%3E") no-repeat right 8px center;
+      background-size: 12px;
+      appearance: none;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    #book option {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 200px;
+    }
     @media (max-width: 480px) {
       .footer {
-        flex-direction: column;
-        align-items: stretch;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 8px;
       }
       .bible-version {
         text-align: center;
       }
       .bible-version select {
         max-width: 140px;
+        font-size: 13px;
+      }
+      #book {
+        min-width: 100px;
+        max-width: 160px;
         font-size: 13px;
       }
     }
@@ -215,8 +242,8 @@ let BibleData = {};
 
 // 그리드 생성
 const grid = document.getElementById("grid");
-const dateCells = [];
-const memoCells = [];
+const dateControls = [];
+const memoControls = [];
 
 for (let i = 0; i < 42; i++) {
   const cell = document.createElement("div");
@@ -226,8 +253,8 @@ for (let i = 0; i < 42; i++) {
   cell.appendChild(dateDiv);
   cell.appendChild(memoDiv);
   grid.appendChild(cell);
-  dateCells.push(dateDiv);
-  memoCells.push(memoDiv);
+  dateControls.push(dateDiv);
+  memoControls.push(memoDiv);
 
   cell.addEventListener("click", (e) => {
     if (e.target.classList.contains("memo")) {
@@ -343,8 +370,8 @@ function loadBibleData(fileName) {
 // 달력 내용 저장/로드
 function saveState() {
   const state = {
-    dates: dateCells.map(d => d.textContent.trim()),
-    memos: memoCells.map(m => m.textContent.trim())
+    dates: dateControls.map(d => d.textContent.trim()),
+    memos: memoControls.map(m => m.textContent.trim())
   };
   localStorage.setItem("bibleCalendarGrid", JSON.stringify(state));
 }
@@ -353,22 +380,22 @@ function loadState() {
   const saved = localStorage.getItem("bibleCalendarGrid");
   if (saved) {
     const state = JSON.parse(saved);
-    state.dates?.forEach((v,i) => { if(v) dateCells[i].textContent = v; });
-    state.memos?.forEach((v,i) => { if(v) memoCells[i].textContent = v; });
+    state.dates?.forEach((v,i) => { if(v) dateControls[i].textContent = v; });
+    state.memos?.forEach((v,i) => { if(v) memoControls[i].textContent = v; });
   }
 }
 
 // 초기화
 document.getElementById("reset").onclick = () => {
-  dateCells.forEach(d => d.textContent = "");
-  memoCells.forEach(m => m.textContent = "");
+  dateControls.forEach(d => d.textContent = "");
+  memoControls.forEach(m => m.textContent = "");
   saveState();
   alert("달력이 초기화되었습니다.");
 };
 
 // 날짜 클릭 → 채우기
 function handleDateClick(startIdx) {
-  if (dateCells.some(d => d.textContent.trim() !== "")) return;
+  if (dateControls.some(d => d.textContent.trim() !== "")) return;
 
   let day = 1;
   let ch = parseInt(document.getElementById("chapter").value) || 1;
@@ -377,8 +404,8 @@ function handleDateClick(startIdx) {
 
   for (let i = startIdx; i < 42; i++) {
     if (day > maxDays || ch > maxCh) break;
-    dateCells[i].textContent = day;
-    memoCells[i].textContent = ch + "장";
+    dateControls[i].textContent = day;
+    memoControls[i].textContent = ch + "장";
     day++;
     ch++;
   }
@@ -387,7 +414,7 @@ function handleDateClick(startIdx) {
 
 // 메모 클릭 → 모달
 function handleMemoClick(idx) {
-  const txt = memoCells[idx].textContent.trim();
+  const txt = memoControls[idx].textContent.trim();
   if (!txt) return;
 
   const chNum = parseInt(txt);
