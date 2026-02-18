@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>매일 성경읽기 달력</title>
+  <style>
+    body {
+      font-family: "맑은 고딕", Malgun Gothic, "돋움", dotum, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f0f4f8;
+      color: #333;
+    }
+    .container {
+      max-width: 400px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+    .header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+      justify-content: center;
+    }
+    select, button {
+      padding: 8px 12px;
+      font-size: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background: #fff;
+    }
+    button {
+      background: #3498db;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover { background: #2980b9; }
+    .weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      font-weight: bold;
+      color: #555;
+      margin: 10px 0;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+    .cell {
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: #fafafa;
+      min-height: 60px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .cell:hover { background: #e8f4fd; }
+    .date {
+      font-weight: bold;
+      font-size: 14px;
+      color: #2c3e50;
+    }
+    .memo {
+      font-size: 12px;
+      color: #0066cc;
+      font-weight: bold;
+      background: #e6f2ff;
+      width: 100%;
+      text-align: center;
+      border-radius: 4px;
+      padding: 2px 0;
+    }
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .today {
+      color: #0066cc;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .bible-version {
+      margin: 0;
+      text-align: right;
+    }
+    .bible-version select {
+      width: auto;
+      min-width: 110px;
+      max-width: 160px;
+      padding: 6px 24px 6px 8px;
+      font-size: 14px;
+      border-radius: 6px;
+      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpolygon points='0,0 12,0 6,12' fill='%23333'/%3E%3C/svg%3E") no-repeat right 8px center;
+      background-size: 12px;
+      appearance: none;
+    }
+    @media (max-width: 480px) {
+      .footer {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .bible-version {
+        text-align: center;
+      }
+      .bible-version select {
+        max-width: 140px;
+        font-size: 13px;
+      }
+    }
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: white;
+      padding: 24px;
+      max-width: 90%;
+      max-height: 85vh;
+      overflow-y: auto;
+      border-radius: 12px;
+      position: relative;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    .close {
+      position: absolute;
+      top: 12px;
+      right: 20px;
+      font-size: 32px;
+      cursor: pointer;
+      color: #aaa;
+    }
+    .close:hover { color: #333; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>매일 성경읽기 달력</h2>
+
+  <div class="header">
+    <select id="maxDays">
+      <option>28</option><option>29</option><option>30</option><option selected>31</option>
+    </select>
+    <select id="month">
+      <option>1월</option><option>2월</option><option>3월</option><option>4월</option>
+      <option>5월</option><option>6월</option><option>7월</option><option>8월</option>
+      <option>9월</option><option>10월</option><option>11월</option><option>12월</option>
+    </select>
+    <select id="book"></select>
+    <select id="chapter"></select>
+  </div>
+
+  <div class="weekdays">
+    <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="footer">
+    <button id="reset">초기화</button>
+    <div class="today" id="today"></div>
+    <div class="bible-version">
+      <select id="bibleVersion">
+        <option value="HRVbible.json" selected>개역개정</option>
+        <option value="HKJVbible.json">킹흠정역</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <span class="close" onclick="document.getElementById('modal').style.display='none'">×</span>
+    <h3 id="modalTitle"></h3>
+    <pre id="modalContent" style="white-space: pre-wrap; font-family: inherit; line-height: 1.6;"></pre>
+  </div>
+</div>
+
+<script>
+// 데이터
+const BookList = ["창세기","출애굽기","레위기","민수기","신명기","여호수아","사사기","룻기","사무엘상","사무엘하","열왕기상","열왕기하","역대상","역대하","에스라","느헤미야","에스더","욥기","시편","잠언","전도서","아가","이사야","예레미야","예레미야애가","에스겔","다니엘","호세아","요엘","아모스","오바댜","요나","미가","나훔","하박국","스바냐","학개","스가랴","말라기","마태복음","마가복음","누가복음","요한복음","사도행전","로마서","고린도전서","고린도후서","갈라디아서","에베소서","빌립보서","골로새서","데살로니가전서","데살로니가후서","디모데전서","디모데후서","디도서","빌레몬서","히브리서","야고보서","베드로전서","베드로후서","요한일서","요한이서","요한삼서","유다서","요한계시록"];
+
+const BookMap = {"창세기":"창","출애굽기":"출","레위기":"레","민수기":"민","신명기":"신","여호수아":"수","사사기":"삿","룻기":"룻","사무엘상":"삼상","사무엘하":"삼하","열왕기상":"왕상","열왕기하":"왕하","역대상":"대상","역대하":"대하","에스라":"스","느헤미야":"느","에스더":"에","욥기":"욥","시편":"시","잠언":"잠","전도서":"전","아가":"아","이사야":"사","예레미야":"렘","예레미야애가":"애","에스겔":"겔","다니엘":"단","호세아":"호","요엘":"욜","아모스":"암","오바댜":"옵","요나":"욘","미가":"미","나훔":"나","하박국":"합","스바냐":"습","학개":"학","스가랴":"슥","말라기":"말","마태복음":"마","마가복음":"막","누가복음":"눅","요한복음":"요","사도행전":"행","로마서":"롬","고린도전서":"고전","고린도후서":"고후","갈라디아서":"갈","에베소서":"엡","빌립보서":"빌","골로새서":"골","데살로니가전서":"살전","데살로니가후서":"살후","디모데전서":"딤전","디모데후서":"딤후","디도서":"딛","빌레몬서":"몬","히브리서":"히","야고보서":"약","베드로전서":"벧전","베드로후서":"벧후","요한일서":"요일","요한이서":"요이","요한삼서":"요삼","유다서":"유","요한계시록":"계"};
+
+const BookChapterCount = {"창세기":50,"출애굽기":40,"레위기":27,"민수기":36,"신명기":34,"여호수아":24,"사사기":21,"룻기":4,"사무엘상":31,"사무엘하":24,"열왕기상":22,"열왕기하":25,"역대상":29,"역대하":36,"에스라":10,"느헤미야":13,"에스더":10,"욥기":42,"시편":150,"잠언":31,"전도서":12,"아가":8,"이사야":66,"예레미야":52,"예레미야애가":5,"에스겔":48,"다니엘":12,"호세아":14,"요엘":3,"아모스":9,"오바댜":1,"요나":4,"미가":7,"나훔":3,"하박국":3,"스바냐":3,"학개":2,"스가랴":14,"말라기":4,"마태복음":28,"마가복음":16,"누가복음":24,"요한복음":21,"사도행전":28,"로마서":16,"고린도전서":16,"고린도후서":13,"갈라디아서":6,"에베소서":6,"빌립보서":4,"골로새서":4,"데살로니가전서":5,"데살로니가후서":3,"디모데전서":6,"디모데후서":4,"디도서":3,"빌레몬서":1,"히브리서":13,"야고보서":5,"베드로전서":5,"베드로후서":3,"요한일서":5,"요한이서":1,"요한삼서":1,"유다서":1,"요한계시록":22};
+
+let BibleData = {};
+
+// 그리드 생성
+const grid = document.getElementById("grid");
+const dateCells = [];
+const memoCells = [];
+
+for (let i = 0; i < 42; i++) {
+  const cell = document.createElement("div");
+  cell.className = "cell";
+  const dateDiv = document.createElement("div"); dateDiv.className = "date";
+  const memoDiv = document.createElement("div"); memoDiv.className = "memo";
+  cell.appendChild(dateDiv);
+  cell.appendChild(memoDiv);
+  grid.appendChild(cell);
+  dateCells.push(dateDiv);
+  memoCells.push(memoDiv);
+
+  cell.addEventListener("click", (e) => {
+    if (e.target.classList.contains("memo")) {
+      handleMemoClick(i);
+    } else {
+      handleDateClick(i);
+    }
+  });
+}
+
+// 책 드롭다운 채우기
+const bookSel = document.getElementById("book");
+BookList.forEach(b => {
+  const opt = document.createElement("option");
+  opt.textContent = b;
+  bookSel.appendChild(opt);
+});
+
+// 장 목록 갱신
+function updateChapters() {
+  const book = bookSel.value;
+  const max = BookChapterCount[book] || 150;
+  const chSel = document.getElementById("chapter");
+  chSel.innerHTML = "";
+  for (let i = 1; i <= max; i++) {
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = i + "장";
+    chSel.appendChild(opt);
+  }
+}
+
+// 월 → 최대일수
+function updateMaxDays() {
+  const m = parseInt(document.getElementById("month").value);
+  let days = 31;
+  if (m === 2) days = 28;
+  else if ([4,6,9,11].includes(m)) days = 30;
+  document.getElementById("maxDays").value = days;
+}
+
+// 오늘 날짜
+function updateToday() {
+  const now = new Date();
+  document.getElementById("today").textContent = `${now.getMonth()+1}월 ${now.getDate()}일`;
+}
+setInterval(updateToday, 60000);
+updateToday();
+
+// 설정 저장 / 불러오기
+function saveSettings() {
+  const state = {
+    book: bookSel.value,
+    chapter: document.getElementById("chapter").value,
+    month: document.getElementById("month").value,
+    maxDays: document.getElementById("maxDays").value,
+    bibleVersion: document.getElementById("bibleVersion").value
+  };
+  localStorage.setItem("bibleCalendarSettings", JSON.stringify(state));
+}
+
+function loadSettings() {
+  const saved = localStorage.getItem("bibleCalendarSettings");
+  if (!saved) return;
+  const state = JSON.parse(saved);
+
+  if (state.book && BookList.includes(state.book)) bookSel.value = state.book;
+  updateChapters();
+
+  const chSel = document.getElementById("chapter");
+  if (state.chapter && [...chSel.options].some(o => o.value == state.chapter)) chSel.value = state.chapter;
+
+  if (state.month) document.getElementById("month").value = state.month;
+  if (state.maxDays) document.getElementById("maxDays").value = state.maxDays;
+  if (state.bibleVersion) document.getElementById("bibleVersion").value = state.bibleVersion;
+
+  updateMaxDays();
+  updateToday();
+}
+
+// 이벤트
+bookSel.addEventListener("change", () => { updateChapters(); saveSettings(); });
+document.getElementById("chapter").addEventListener("change", saveSettings);
+document.getElementById("month").addEventListener("change", () => { updateMaxDays(); updateToday(); saveSettings(); });
+document.getElementById("maxDays").addEventListener("change", saveSettings);
+
+// 성경 버전 변경 시 JSON 새로 로드
+document.getElementById("bibleVersion").addEventListener("change", (e) => {
+  const file = e.target.value;
+  loadBibleData(file);
+  saveSettings();
+});
+
+// 성경 JSON 로드 함수
+function loadBibleData(fileName) {
+  fetch(fileName)
+    .then(r => {
+      if (!r.ok) throw new Error(`파일 로드 실패: ${fileName}`);
+      return r.json();
+    })
+    .then(data => {
+      BibleData = data;
+      console.log(`${fileName} 로드 완료`);
+      // 필요 시 알림이나 UI 업데이트
+      // alert(`${fileName} 버전으로 변경되었습니다.`);
+    })
+    .catch(err => {
+      console.error(err);
+      alert(`${fileName} 파일을 불러올 수 없습니다.`);
+    });
+}
+
+// 달력 내용 저장/로드
+function saveState() {
+  const state = {
+    dates: dateCells.map(d => d.textContent.trim()),
+    memos: memoCells.map(m => m.textContent.trim())
+  };
+  localStorage.setItem("bibleCalendarGrid", JSON.stringify(state));
+}
+
+function loadState() {
+  const saved = localStorage.getItem("bibleCalendarGrid");
+  if (saved) {
+    const state = JSON.parse(saved);
+    state.dates?.forEach((v,i) => { if(v) dateCells[i].textContent = v; });
+    state.memos?.forEach((v,i) => { if(v) memoCells[i].textContent = v; });
+  }
+}
+
+// 초기화
+document.getElementById("reset").onclick = () => {
+  dateCells.forEach(d => d.textContent = "");
+  memoCells.forEach(m => m.textContent = "");
+  saveState();
+  alert("달력이 초기화되었습니다.");
+};
+
+// 날짜 클릭 → 채우기
+function handleDateClick(startIdx) {
+  if (dateCells.some(d => d.textContent.trim() !== "")) return;
+
+  let day = 1;
+  let ch = parseInt(document.getElementById("chapter").value) || 1;
+  const maxCh = BookChapterCount[bookSel.value] || 150;
+  const maxDays = parseInt(document.getElementById("maxDays").value);
+
+  for (let i = startIdx; i < 42; i++) {
+    if (day > maxDays || ch > maxCh) break;
+    dateCells[i].textContent = day;
+    memoCells[i].textContent = ch + "장";
+    day++;
+    ch++;
+  }
+  saveState();
+}
+
+// 메모 클릭 → 모달
+function handleMemoClick(idx) {
+  const txt = memoCells[idx].textContent.trim();
+  if (!txt) return;
+
+  const chNum = parseInt(txt);
+  const book = bookSel.value;
+  const abbr = BookMap[book];
+  const titleEl = document.getElementById("modalTitle");
+  const contentEl = document.getElementById("modalContent");
+
+  titleEl.textContent = `${book} ${chNum}장`;
+
+  if (Object.keys(BibleData).length === 0) {
+    contentEl.textContent = "성경 데이터 로딩 중입니다...";
+  } else {
+    let text = "";
+    const prefix = abbr + chNum + ":";
+    for (let key in BibleData) {
+      if (key.startsWith(prefix)) {
+        const verse = key.split(":")[1];
+        text += `${verse}  ${BibleData[key]}\n\n`;
+      }
+    }
+    contentEl.textContent = text || "해당 장 내용이 없습니다.";
+  }
+
+  document.getElementById("modal").style.display = "flex";
+}
+
+// 초기 로드
+loadSettings();
+loadState();
+loadBibleData(document.getElementById("bibleVersion").value);  // 기본값으로 JSON 로드
+</script>
+</body>
+</html>
