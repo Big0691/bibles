@@ -116,25 +116,11 @@
       background-size: 12px;
       appearance: none;
     }
-    /* 성경 목록 드롭다운 스타일 개선 (글자 수에 맞춰 자동 조정) */
-    #book {
-      width: auto;
-      min-width: 120px;
-      max-width: 180px;
-      padding: 6px 24px 6px 8px;
-      font-size: 14px;
-      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpolygon points='0,0 12,0 6,12' fill='%23333'/%3E%3C/svg%3E") no-repeat right 8px center;
-      background-size: 12px;
-      appearance: none;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    #book option {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      max-width: 200px;
+    .version-info {
+      text-align: center;
+      font-size: 12px;
+      color: #777;
+      margin-top: 8px;
     }
     @media (max-width: 480px) {
       .footer {
@@ -148,11 +134,6 @@
       }
       .bible-version select {
         max-width: 140px;
-        font-size: 13px;
-      }
-      #book {
-        min-width: 100px;
-        max-width: 160px;
         font-size: 13px;
       }
     }
@@ -215,11 +196,19 @@
     <div class="today" id="today"></div>
     <div class="bible-version">
       <select id="bibleVersion">
-        <option value="HRVbible.json" selected>개역개정</option>
-        <option value="HKJVbible.json">킹흠정역</option>
+        <option value="korNKRV.json" data-name="개역개정판" selected>개역개정판</option>
+        <option value="HRVbible.json" data-name="개역한글">개역한글</option>
+        <option value="HKJVbible.json" data-name="흠정역">흠정역</option>
+        <option value="korNRSV.json" data-name="새번역">새번역</option>
+        <option value="korEASY.json" data-name="쉬운성경">쉬운성경</option>
+        <option value="korDOB.json" data-name="우리말성경">우리말성경</option>
+        <option value="korTKV.json" data-name="현대어">현대어</option>
+        <option value="korKLB.json" data-name="현대인">현대인</option>
       </select>
     </div>
   </div>
+
+  <div class="version-info" id="versionInfo">(2026-02-18) ver 1.8 (8=성경종류)</div>
 </div>
 
 <div class="modal" id="modal">
@@ -231,16 +220,16 @@
 </div>
 
 <script>
-// 데이터
-const BookList = ["창세기","출애굽기","레위기","민수기","신명기","여호수아","사사기","룻기","사무엘상","사무엘하","열왕기상","열왕기하","역대상","역대하","에스라","느헤미야","에스더","욥기","시편","잠언","전도서","아가","이사야","예레미야","애가","에스겔","다니엘","호세아","요엘","아모스","오바댜","요나","미가","나훔","하박국","스바냐","학개","스가랴","말라기","마태복음","마가복음","누가복음","요한복음","사도행전","로마서","고린도전서","고린도후서","갈라디아서","에베소서","빌립보서","골로새서","살전","살후","디모데전서","디모데후서","디도서","빌레몬서","히브리서","야고보서","베드로전서","베드로후서","요한일서","요한이서","요한삼서","유다서","요한계시록"];
+// 데이터 (기존 그대로 유지)
+const BookList = ["창세기","출애굽기","레위기","민수기","신명기","여호수아","사사기","룻기","사무엘상","사무엘하","열왕기상","열왕기하","역대상","역대하","에스라","느헤미야","에스더","욥기","시편","잠언","전도서","아가","이사야","예레미야","예레미야애가","에스겔","다니엘","호세아","요엘","아모스","오바댜","요나","미가","나훔","하박국","스바냐","학개","스가랴","말라기","마태복음","마가복음","누가복음","요한복음","사도행전","로마서","고린도전서","고린도후서","갈라디아서","에베소서","빌립보서","골로새서","데살로니가전서","데살로니가후서","디모데전서","디모데후서","디도서","빌레몬서","히브리서","야고보서","베드로전서","베드로후서","요한일서","요한이서","요한삼서","유다서","요한계시록"];
 
-const BookMap = {"창세기":"창","출애굽기":"출","레위기":"레","민수기":"민","신명기":"신","여호수아":"수","사사기":"삿","룻기":"룻","사무엘상":"삼상","사무엘하":"삼하","열왕기상":"왕상","열왕기하":"왕하","역대상":"대상","역대하":"대하","에스라":"스","느헤미야":"느","에스더":"에","욥기":"욥","시편":"시","잠언":"잠","전도서":"전","아가":"아","이사야":"사","예레미야":"렘","애가":"애","에스겔":"겔","다니엘":"단","호세아":"호","요엘":"욜","아모스":"암","오바댜":"옵","요나":"욘","미가":"미","나훔":"나","하박국":"합","스바냐":"습","학개":"학","스가랴":"슥","말라기":"말","마태복음":"마","마가복음":"막","누가복음":"눅","요한복음":"요","사도행전":"행","로마서":"롬","고린도전서":"고전","고린도후서":"고후","갈라디아서":"갈","에베소서":"엡","빌립보서":"빌","골로새서":"골","살전":"살전","살후":"살후","디모데전서":"딤전","디모데후서":"딤후","디도서":"딛","빌레몬서":"몬","히브리서":"히","야고보서":"약","베드로전서":"벧전","베드로후서":"벧후","요한일서":"요일","요한이서":"요이","요한삼서":"요삼","유다서":"유","요한계시록":"계"};
+const BookMap = {"창세기":"창","출애굽기":"출","레위기":"레","민수기":"민","신명기":"신","여호수아":"수","사사기":"삿","룻기":"룻","사무엘상":"삼상","사무엘하":"삼하","열왕기상":"왕상","열왕기하":"왕하","역대상":"대상","역대하":"대하","에스라":"스","느헤미야":"느","에스더":"에","욥기":"욥","시편":"시","잠언":"잠","전도서":"전","아가":"아","이사야":"사","예레미야":"렘","예레미야애가":"애","에스겔":"겔","다니엘":"단","호세아":"호","요엘":"욜","아모스":"암","오바댜":"옵","요나":"욘","미가":"미","나훔":"나","하박국":"합","스바냐":"습","학개":"학","스가랴":"슥","말라기":"말","마태복음":"마","마가복음":"막","누가복음":"눅","요한복음":"요","사도행전":"행","로마서":"롬","고린도전서":"고전","고린도후서":"고후","갈라디아서":"갈","에베소서":"엡","빌립보서":"빌","골로새서":"골","데살로니가전서":"살전","데살로니가후서":"살후","디모데전서":"딤전","디모데후서":"딤후","디도서":"딛","빌레몬서":"몬","히브리서":"히","야고보서":"약","베드로전서":"벧전","베드로후서":"벧후","요한일서":"요일","요한이서":"요이","요한삼서":"요삼","유다서":"유","요한계시록":"계"};
 
-const BookChapterCount = {"창세기":50,"출애굽기":40,"레위기":27,"민수기":36,"신명기":34,"여호수아":24,"사사기":21,"룻기":4,"사무엘상":31,"사무엘하":24,"열왕기상":22,"열왕기하":25,"역대상":29,"역대하":36,"에스라":10,"느헤미야":13,"에스더":10,"욥기":42,"시편":150,"잠언":31,"전도서":12,"아가":8,"이사야":66,"예레미야":52,"애가":5,"에스겔":48,"다니엘":12,"호세아":14,"요엘":3,"아모스":9,"오바댜":1,"요나":4,"미가":7,"나훔":3,"하박국":3,"스바냐":3,"학개":2,"스가랴":14,"말라기":4,"마태복음":28,"마가복음":16,"누가복음":24,"요한복음":21,"사도행전":28,"로마서":16,"고린도전서":16,"고린도후서":13,"갈라디아서":6,"에베소서":6,"빌립보서":4,"골로새서":4,"살전":5,"살후":3,"디모데전서":6,"디모데후서":4,"디도서":3,"빌레몬서":1,"히브리서":13,"야고보서":5,"베드로전서":5,"베드로후서":3,"요한일서":5,"요한이서":1,"요한삼서":1,"유다서":1,"요한계시록":22};
+const BookChapterCount = {"창세기":50,"출애굽기":40,"레위기":27,"민수기":36,"신명기":34,"여호수아":24,"사사기":21,"룻기":4,"사무엘상":31,"사무엘하":24,"열왕기상":22,"열왕기하":25,"역대상":29,"역대하":36,"에스라":10,"느헤미야":13,"에스더":10,"욥기":42,"시편":150,"잠언":31,"전도서":12,"아가":8,"이사야":66,"예레미야":52,"예레미야애가":5,"에스겔":48,"다니엘":12,"호세아":14,"요엘":3,"아모스":9,"오바댜":1,"요나":4,"미가":7,"나훔":3,"하박국":3,"스바냐":3,"학개":2,"스가랴":14,"말라기":4,"마태복음":28,"마가복음":16,"누가복음":24,"요한복음":21,"사도행전":28,"로마서":16,"고린도전서":16,"고린도후서":13,"갈라디아서":6,"에베소서":6,"빌립보서":4,"골로새서":4,"데살로니가전서":5,"데살로니가후서":3,"디모데전서":6,"디모데후서":4,"디도서":3,"빌레몬서":1,"히브리서":13,"야고보서":5,"베드로전서":5,"베드로후서":3,"요한일서":5,"요한이서":1,"요한삼서":1,"유다서":1,"요한계시록":22};
 
 let BibleData = {};
 
-// 그리드 생성
+// 그리드 생성 (기존 그대로)
 const grid = document.getElementById("grid");
 const dateControls = [];
 const memoControls = [];
@@ -296,10 +285,14 @@ function updateMaxDays() {
   document.getElementById("maxDays").value = days;
 }
 
-// 오늘 날짜
+// 오늘 날짜 + 버전 정보 실시간 업데이트
 function updateToday() {
   const now = new Date();
-  document.getElementById("today").textContent = `${now.getMonth()+1}월 ${now.getDate()}일`;
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  document.getElementById("today").textContent = `${year}-${month}-${day}`;
+  document.getElementById("versionInfo").textContent = `(${year}-${month}-${day}) ver 1.8 (8=성경종류)`;
 }
 setInterval(updateToday, 60000);
 updateToday();
@@ -358,8 +351,6 @@ function loadBibleData(fileName) {
     .then(data => {
       BibleData = data;
       console.log(`${fileName} 로드 완료`);
-      // 필요 시 알림이나 UI 업데이트
-      // alert(`${fileName} 버전으로 변경되었습니다.`);
     })
     .catch(err => {
       console.error(err);
@@ -412,7 +403,7 @@ function handleDateClick(startIdx) {
   saveState();
 }
 
-// 메모 클릭 → 모달
+// 메모 클릭 → 모달 (버전 이름 포함)
 function handleMemoClick(idx) {
   const txt = memoControls[idx].textContent.trim();
   if (!txt) return;
@@ -423,7 +414,9 @@ function handleMemoClick(idx) {
   const titleEl = document.getElementById("modalTitle");
   const contentEl = document.getElementById("modalContent");
 
-  titleEl.textContent = `${book} ${chNum}장`;
+  const versionSelect = document.getElementById("bibleVersion");
+  const versionName = versionSelect.selectedOptions[0].dataset.name || versionSelect.value.replace('.json', '');
+  titleEl.textContent = `${versionName} ${book} ${chNum}장`;
 
   if (Object.keys(BibleData).length === 0) {
     contentEl.textContent = "성경 데이터 로딩 중입니다...";
@@ -445,7 +438,7 @@ function handleMemoClick(idx) {
 // 초기 로드
 loadSettings();
 loadState();
-loadBibleData(document.getElementById("bibleVersion").value);  // 기본값으로 JSON 로드
+loadBibleData(document.getElementById("bibleVersion").value);
 </script>
 </body>
 </html>
