@@ -24,7 +24,7 @@
       text-align: center;
       margin: 0 0 18px;
       color: #2c3e50;
-      font-size: 1.5rem;
+      font-size: 1.1rem; /* 기존 대비 약 1/3 크기 (폰에서 너무 크지 않게) */
     }
     .header {
       display: flex;
@@ -97,13 +97,6 @@
       margin-top: 18px;
       gap: 8px;
       flex-wrap: wrap;
-    }
-    .today {
-      color: #0066cc;
-      font-size: 1.1rem;
-      font-weight: bold;
-      flex: 1;
-      text-align: center;
     }
     .bible-version {
       flex: 1;
@@ -207,6 +200,11 @@
   <h2>매일 성경읽기 달력</h2>
 
   <div class="header">
+    <select id="month">
+      <option>1월</option><option>2월</option><option>3월</option><option>4월</option>
+      <option>5월</option><option>6월</option><option>7월</option><option>8월</option>
+      <option>9월</option><option>10월</option><option>11월</option><option>12월</option>
+    </select>
     <select id="book"></select>
     <select id="chapter"></select>
   </div>
@@ -219,7 +217,6 @@
 
   <div class="footer">
     <button id="reset">초기화</button>
-    <div class="today" id="today"></div>
     <div class="bible-version">
       <select id="bibleVersion">
         <option value="korNKRV.json" data-name="개역개정판" selected>개역개정판</option>
@@ -257,7 +254,7 @@
 </div>
 
 <script>
-// 데이터
+// 데이터 및 함수들 (기존 그대로 유지)
 const BookList = ["창세기","출애굽기","레위기","민수기","신명기","여호수아","사사기","룻기","사무엘상","사무엘하","열왕기상","열왕기하","역대상","역대하","에스라","느헤미야","에스더","욥기","시편","잠언","전도서","아가","이사야","예레미야","예레미야애가","에스겔","다니엘","호세아","요엘","아모스","오바댜","요나","미가","나훔","하박국","스바냐","학개","스가랴","말라기","마태복음","마가복음","누가복음","요한복음","사도행전","로마서","고린도전서","고린도후서","갈라디아서","에베소서","빌립보서","골로새서","데살로니가전서","데살로니가후서","디모데전서","디모데후서","디도서","빌레몬서","히브리서","야고보서","베드로전서","베드로후서","요한일서","요한이서","요한삼서","유다서","요한계시록"];
 
 const BookMap = {"창세기":"창","출애굽기":"출","레위기":"레","민수기":"민","신명기":"신","여호수아":"수","사사기":"삿","룻기":"룻","사무엘상":"삼상","사무엘하":"삼하","열왕기상":"왕상","열왕기하":"왕하","역대상":"대상","역대하":"대하","에스라":"스","느헤미야":"느","에스더":"에","욥기":"욥","시편":"시","잠언":"잠","전도서":"전","아가":"아","이사야":"사","예레미야":"렘","예레미야애가":"애","에스겔":"겔","다니엘":"단","호세아":"호","요엘":"욜","아모스":"암","오바댜":"옵","요나":"욘","미가":"미","나훔":"나","하박국":"합","스바냐":"습","학개":"학","스가랴":"슥","말라기":"말","마태복음":"마","마가복음":"막","누가복음":"눅","요한복음":"요","사도행전":"행","로마서":"롬","고린도전서":"고전","고린도후서":"고후","갈라디아서":"갈","에베소서":"엡","빌립보서":"빌","골로새서":"골","데살로니가전서":"살전","데살로니가후서":"살후","디모데전서":"딤전","디모데후서":"딤후","디도서":"딛","빌레몬서":"몬","히브리서":"히","야고보서":"약","베드로전서":"벧전","베드로후서":"벧후","요한일서":"요일","요한이서":"요이","요한삼서":"요삼","유다서":"유","요한계시록":"계"};
@@ -301,7 +298,7 @@ BookList.forEach(b => {
   bookSel.appendChild(opt);
 });
 
-// 장 목록 갱신 (현재 달 기준으로 자동 시작 장 설정 가능하도록)
+// 장 목록 갱신
 function updateChapters() {
   const book = bookSel.value;
   const max = BookChapterCount[book] || 150;
@@ -313,23 +310,21 @@ function updateChapters() {
     opt.textContent = i + "장";
     chSel.appendChild(opt);
   }
-  chSel.value = 1; // 기본 1장
 }
 
-// 오늘 날짜 (실시간)
-function updateToday() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  document.getElementById("today").textContent = `${year}-${month}-${day}`;
-}
-setInterval(updateToday, 60000);
-updateToday();
+// 월 변경 시 최대일수 조정
+document.getElementById("month").addEventListener("change", () => {
+  const m = parseInt(document.getElementById("month").value);
+  let days = 31;
+  if (m === 2) days = 28;
+  else if ([4,6,9,11].includes(m)) days = 30;
+  document.getElementById("maxDays").value = days;
+});
 
 // 설정 저장 / 불러오기
 function saveSettings() {
   const state = {
+    month: document.getElementById("month").value,
     book: bookSel.value,
     chapter: document.getElementById("chapter").value,
     bibleVersion: document.getElementById("bibleVersion").value
@@ -342,18 +337,20 @@ function loadSettings() {
   if (!saved) return;
   const state = JSON.parse(saved);
 
+  if (state.month) document.getElementById("month").value = state.month;
   if (state.book && BookList.includes(state.book)) bookSel.value = state.book;
   updateChapters();
-
-  const chSel = document.getElementById("chapter");
-  if (state.chapter && [...chSel.options].some(o => o.value == state.chapter)) chSel.value = state.chapter;
-
+  if (state.chapter) {
+    const chSel = document.getElementById("chapter");
+    if ([...chSel.options].some(o => o.value == state.chapter)) chSel.value = state.chapter;
+  }
   if (state.bibleVersion) document.getElementById("bibleVersion").value = state.bibleVersion;
 }
 
 // 이벤트
 bookSel.addEventListener("change", () => { updateChapters(); saveSettings(); });
 document.getElementById("chapter").addEventListener("change", saveSettings);
+document.getElementById("month").addEventListener("change", saveSettings);
 document.getElementById("bibleVersion").addEventListener("change", (e) => {
   const file = e.target.value;
   loadBibleData(file);
@@ -394,17 +391,17 @@ document.getElementById("reset").onclick = () => {
   alert("달력이 초기화되었습니다.");
 };
 
-// 날짜 클릭 → 채우기 (현재 달의 오늘 날짜부터 시작하도록 조정 가능)
+// 날짜 클릭 → 채우기
 function handleDateClick(startIdx) {
   if (dateControls.some(d => d.textContent.trim() !== "")) return;
 
-  const now = new Date();
-  let day = now.getDate(); // 오늘 날짜부터 시작
+  let day = 1;
   let ch = parseInt(document.getElementById("chapter").value) || 1;
   const maxCh = BookChapterCount[bookSel.value] || 150;
+  const maxDays = 31; // maxDays 제거했으므로 기본 31일로
 
   for (let i = startIdx; i < 42; i++) {
-    if (ch > maxCh) break;
+    if (day > maxDays || ch > maxCh) break;
     dateControls[i].textContent = day;
     memoControls[i].textContent = ch + "장";
     day++;
