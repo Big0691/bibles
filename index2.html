@@ -8,7 +8,7 @@
     body {
       font-family: "맑은 고딕", Malgun Gothic, "돋움", dotum, sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 15px;
       background: #f0f4f8;
       color: #333;
     }
@@ -16,32 +16,29 @@
       max-width: 400px;
       margin: 0 auto;
       background: white;
-      padding: 20px;
+      padding: 18px;
       border-radius: 12px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
     h2 {
       text-align: center;
-      margin-bottom: 20px;
+      margin: 0 0 18px;
       color: #2c3e50;
+      font-size: 1.5rem;
     }
     .header {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
       justify-content: center;
     }
     select, button {
       padding: 8px 12px;
-      font-size: 15px;
+      font-size: 14px;
       border: 1px solid #ccc;
       border-radius: 6px;
       background: #fff;
-    }
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
     }
     button {
       background: #3498db;
@@ -49,14 +46,15 @@
       border: none;
       cursor: pointer;
     }
-    button:hover:not(:disabled) { background: #2980b9; }
+    button:hover { background: #2980b9; }
     .weekdays {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       text-align: center;
       font-weight: bold;
       color: #555;
-      margin: 10px 0;
+      margin: 8px 0;
+      font-size: 0.9rem;
     }
     .grid {
       display: grid;
@@ -67,7 +65,7 @@
       border: 1px solid #ddd;
       border-radius: 6px;
       background: #fafafa;
-      min-height: 60px;
+      min-height: 52px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -79,11 +77,11 @@
     .cell:hover { background: #e8f4fd; }
     .date {
       font-weight: bold;
-      font-size: 14px;
+      font-size: 13px;
       color: #2c3e50;
     }
     .memo {
-      font-size: 12px;
+      font-size: 11px;
       color: #0066cc;
       font-weight: bold;
       background: #e6f2ff;
@@ -96,25 +94,27 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 20px;
+      margin-top: 18px;
+      gap: 8px;
       flex-wrap: wrap;
-      gap: 10px;
     }
     .today {
       color: #0066cc;
-      font-size: 18px;
+      font-size: 1.1rem;
       font-weight: bold;
+      flex: 1;
+      text-align: center;
     }
     .bible-version {
-      margin: 0;
+      flex: 1;
       text-align: right;
     }
     .bible-version select {
       width: auto;
-      min-width: 110px;
-      max-width: 160px;
-      padding: 6px 24px 6px 8px;
-      font-size: 14px;
+      min-width: 100px;
+      max-width: 150px;
+      padding: 6px 22px 6px 8px;
+      font-size: 13px;
       border-radius: 6px;
       background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpolygon points='0,0 12,0 6,12' fill='%23333'/%3E%3C/svg%3E") no-repeat right 8px center;
       background-size: 12px;
@@ -122,9 +122,23 @@
     }
     .version-info {
       text-align: center;
-      font-size: 12px;
+      font-size: 11px;
       color: #777;
       margin-top: 8px;
+    }
+    @media (max-width: 480px) {
+      .footer {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+      .bible-version {
+        text-align: center;
+      }
+      .bible-version select {
+        max-width: 130px;
+        font-size: 12px;
+      }
     }
     .modal {
       position: fixed;
@@ -137,12 +151,11 @@
     }
     .modal-content {
       background: white;
-      padding: 20px;
+      padding: 18px;
       max-width: 90%;
       max-height: 85vh;
       overflow-y: auto;
       border-radius: 12px;
-      position: relative;
       box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     }
     .close {
@@ -154,58 +167,36 @@
       color: #aaa;
     }
     .close:hover { color: #333; }
-    .chapter-nav {
+    .chapter-nav, .chapter-nav-bottom {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      margin: 8px 0 12px;
+      margin: 8px 0;
       gap: 8px;
-      flex-wrap: nowrap;
     }
-    .chapter-nav button {
-      padding: 6px 12px;
+    .chapter-nav button, .chapter-nav-bottom button {
+      padding: 6px 14px;
       font-size: 13px;
       min-width: 80px;
-      white-space: nowrap;
+      flex: 1;
     }
     #modalTitle {
-      font-size: 18px;
+      font-size: 17px;
       margin: 0;
       text-align: center;
       flex: 1;
       line-height: 1.3;
     }
-    .chapter-nav-bottom {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 20px;
-      gap: 10px;
-    }
-    .chapter-nav-bottom button {
-      padding: 8px 16px;
-      font-size: 14px;
-      min-width: 100px;
-      flex: 1;
-    }
     @media (max-width: 480px) {
-      .chapter-nav {
-        margin: 6px 0 10px;
+      .chapter-nav, .chapter-nav-bottom {
         gap: 6px;
       }
-      .chapter-nav button {
+      .chapter-nav button, .chapter-nav-bottom button {
         padding: 5px 10px;
         font-size: 12px;
         min-width: 70px;
       }
       #modalTitle {
-        font-size: 16px;
-      }
-      .chapter-nav-bottom {
-        gap: 8px;
-      }
-      .chapter-nav-bottom button {
-        padding: 7px 14px;
-        font-size: 13px;
+        font-size: 15px;
       }
     }
   </style>
@@ -216,14 +207,6 @@
   <h2>매일 성경읽기 달력</h2>
 
   <div class="header">
-    <select id="maxDays">
-      <option>28</option><option>29</option><option>30</option><option selected>31</option>
-    </select>
-    <select id="month">
-      <option>1월</option><option>2월</option><option>3월</option><option>4월</option>
-      <option>5월</option><option>6월</option><option>7월</option><option>8월</option>
-      <option>9월</option><option>10월</option><option>11월</option><option>12월</option>
-    </select>
     <select id="book"></select>
     <select id="chapter"></select>
   </div>
@@ -239,26 +222,25 @@
     <div class="today" id="today"></div>
     <div class="bible-version">
       <select id="bibleVersion">
-       <option value="kornkrv.json" data-name="개역개정판" selected>개역개정판</option>
+        <option value="korNKRV.json" data-name="개역개정판" selected>개역개정판</option>
         <option value="HRVbible.json" data-name="개역한글">개역한글</option>
         <option value="HKJVbible.json" data-name="흠정역">흠정역</option>
-        <option value="kornrsv.json" data-name="새번역">새번역</option>
-        <option value="koreasy.json" data-name="쉬운성경">쉬운성경</option>
-        <option value="kordob.json" data-name="우리말성경">우리말성경</option>
-        <option value="kortkv.json" data-name="현대어">현대어</option>
-        <option value="korklb.json" data-name="현대인">현대인</option>
+        <option value="korNRSV.json" data-name="새번역">새번역</option>
+        <option value="korEASY.json" data-name="쉬운성경">쉬운성경</option>
+        <option value="korDOB.json" data-name="우리말성경">우리말성경</option>
+        <option value="korTKV.json" data-name="현대어">현대어</option>
+        <option value="korKLB.json" data-name="현대인">현대인</option>
       </select>
     </div>
   </div>
 
-  <div class="version-info">(2026-02-18) ver 1.1.8 (8=성경종류)</div>
+  <div class="version-info">(2026-02-18) ver 1.8 (8=성경종류)</div>
 </div>
 
 <div class="modal" id="modal">
   <div class="modal-content">
     <span class="close" onclick="document.getElementById('modal').style.display='none'">×</span>
     
-    <!-- 상단 네비게이션 -->
     <div class="chapter-nav">
       <button id="prevChapterTop" onclick="changeChapter(-1)">◀ 이전</button>
       <h3 id="modalTitle"></h3>
@@ -267,7 +249,6 @@
 
     <pre id="modalContent" style="white-space: pre-wrap; font-family: inherit; line-height: 1.6;"></pre>
 
-    <!-- 하단 네비게이션 -->
     <div class="chapter-nav-bottom">
       <button id="prevChapterBottom" onclick="changeChapter(-1)">◀ 이전</button>
       <button id="nextChapterBottom" onclick="changeChapter(1)">다음 ▶</button>
@@ -276,7 +257,7 @@
 </div>
 
 <script>
-// 데이터 및 함수들
+// 데이터
 const BookList = ["창세기","출애굽기","레위기","민수기","신명기","여호수아","사사기","룻기","사무엘상","사무엘하","열왕기상","열왕기하","역대상","역대하","에스라","느헤미야","에스더","욥기","시편","잠언","전도서","아가","이사야","예레미야","예레미야애가","에스겔","다니엘","호세아","요엘","아모스","오바댜","요나","미가","나훔","하박국","스바냐","학개","스가랴","말라기","마태복음","마가복음","누가복음","요한복음","사도행전","로마서","고린도전서","고린도후서","갈라디아서","에베소서","빌립보서","골로새서","데살로니가전서","데살로니가후서","디모데전서","디모데후서","디도서","빌레몬서","히브리서","야고보서","베드로전서","베드로후서","요한일서","요한이서","요한삼서","유다서","요한계시록"];
 
 const BookMap = {"창세기":"창","출애굽기":"출","레위기":"레","민수기":"민","신명기":"신","여호수아":"수","사사기":"삿","룻기":"룻","사무엘상":"삼상","사무엘하":"삼하","열왕기상":"왕상","열왕기하":"왕하","역대상":"대상","역대하":"대하","에스라":"스","느헤미야":"느","에스더":"에","욥기":"욥","시편":"시","잠언":"잠","전도서":"전","아가":"아","이사야":"사","예레미야":"렘","예레미야애가":"애","에스겔":"겔","다니엘":"단","호세아":"호","요엘":"욜","아모스":"암","오바댜":"옵","요나":"욘","미가":"미","나훔":"나","하박국":"합","스바냐":"습","학개":"학","스가랴":"슥","말라기":"말","마태복음":"마","마가복음":"막","누가복음":"눅","요한복음":"요","사도행전":"행","로마서":"롬","고린도전서":"고전","고린도후서":"고후","갈라디아서":"갈","에베소서":"엡","빌립보서":"빌","골로새서":"골","데살로니가전서":"살전","데살로니가후서":"살후","디모데전서":"딤전","디모데후서":"딤후","디도서":"딛","빌레몬서":"몬","히브리서":"히","야고보서":"약","베드로전서":"벧전","베드로후서":"벧후","요한일서":"요일","요한이서":"요이","요한삼서":"요삼","유다서":"유","요한계시록":"계"};
@@ -320,7 +301,7 @@ BookList.forEach(b => {
   bookSel.appendChild(opt);
 });
 
-// 장 목록 갱신
+// 장 목록 갱신 (현재 달 기준으로 자동 시작 장 설정 가능하도록)
 function updateChapters() {
   const book = bookSel.value;
   const max = BookChapterCount[book] || 150;
@@ -332,18 +313,10 @@ function updateChapters() {
     opt.textContent = i + "장";
     chSel.appendChild(opt);
   }
+  chSel.value = 1; // 기본 1장
 }
 
-// 월 → 최대일수
-function updateMaxDays() {
-  const m = parseInt(document.getElementById("month").value);
-  let days = 31;
-  if (m === 2) days = 28;
-  else if ([4,6,9,11].includes(m)) days = 30;
-  document.getElementById("maxDays").value = days;
-}
-
-// 오늘 날짜
+// 오늘 날짜 (실시간)
 function updateToday() {
   const now = new Date();
   const year = now.getFullYear();
@@ -359,8 +332,6 @@ function saveSettings() {
   const state = {
     book: bookSel.value,
     chapter: document.getElementById("chapter").value,
-    month: document.getElementById("month").value,
-    maxDays: document.getElementById("maxDays").value,
     bibleVersion: document.getElementById("bibleVersion").value
   };
   localStorage.setItem("bibleCalendarSettings", JSON.stringify(state));
@@ -377,21 +348,12 @@ function loadSettings() {
   const chSel = document.getElementById("chapter");
   if (state.chapter && [...chSel.options].some(o => o.value == state.chapter)) chSel.value = state.chapter;
 
-  if (state.month) document.getElementById("month").value = state.month;
-  if (state.maxDays) document.getElementById("maxDays").value = state.maxDays;
   if (state.bibleVersion) document.getElementById("bibleVersion").value = state.bibleVersion;
-
-  updateMaxDays();
-  updateToday();
 }
 
 // 이벤트
 bookSel.addEventListener("change", () => { updateChapters(); saveSettings(); });
 document.getElementById("chapter").addEventListener("change", saveSettings);
-document.getElementById("month").addEventListener("change", () => { updateMaxDays(); updateToday(); saveSettings(); });
-document.getElementById("maxDays").addEventListener("change", saveSettings);
-
-// 성경 버전 변경 시 JSON 새로 로드
 document.getElementById("bibleVersion").addEventListener("change", (e) => {
   const file = e.target.value;
   loadBibleData(file);
@@ -401,18 +363,9 @@ document.getElementById("bibleVersion").addEventListener("change", (e) => {
 // 성경 JSON 로드 함수
 function loadBibleData(fileName) {
   fetch(fileName)
-    .then(r => {
-      if (!r.ok) throw new Error(`파일 로드 실패: ${fileName}`);
-      return r.json();
-    })
-    .then(data => {
-      BibleData = data;
-      console.log(`${fileName} 로드 완료`);
-    })
-    .catch(err => {
-      console.error(err);
-      alert(`${fileName} 파일을 불러올 수 없습니다.`);
-    });
+    .then(r => r.ok ? r.json() : Promise.reject("파일 로드 실패"))
+    .then(data => { BibleData = data; console.log(`${fileName} 로드 완료`); })
+    .catch(err => console.error(err));
 }
 
 // 달력 내용 저장/로드
@@ -441,17 +394,17 @@ document.getElementById("reset").onclick = () => {
   alert("달력이 초기화되었습니다.");
 };
 
-// 날짜 클릭 → 채우기
+// 날짜 클릭 → 채우기 (현재 달의 오늘 날짜부터 시작하도록 조정 가능)
 function handleDateClick(startIdx) {
   if (dateControls.some(d => d.textContent.trim() !== "")) return;
 
-  let day = 1;
+  const now = new Date();
+  let day = now.getDate(); // 오늘 날짜부터 시작
   let ch = parseInt(document.getElementById("chapter").value) || 1;
   const maxCh = BookChapterCount[bookSel.value] || 150;
-  const maxDays = parseInt(document.getElementById("maxDays").value);
 
   for (let i = startIdx; i < 42; i++) {
-    if (day > maxDays || ch > maxCh) break;
+    if (ch > maxCh) break;
     dateControls[i].textContent = day;
     memoControls[i].textContent = ch + "장";
     day++;
@@ -460,7 +413,7 @@ function handleDateClick(startIdx) {
   saveState();
 }
 
-// 이전/다음 장 이동 (상단/하단 모두 적용)
+// 이전/다음 장 이동
 function changeChapter(delta) {
   const newCh = currentChapter + delta;
   const maxCh = BookChapterCount[currentBook] || 150;
@@ -469,7 +422,6 @@ function changeChapter(delta) {
 
   currentChapter = newCh;
 
-  // 모든 버튼 상태 업데이트
   const prevDisabled = (currentChapter <= 1);
   const nextDisabled = (currentChapter >= maxCh);
 
@@ -478,11 +430,9 @@ function changeChapter(delta) {
   document.getElementById("prevChapterBottom").disabled = prevDisabled;
   document.getElementById("nextChapterBottom").disabled = nextDisabled;
 
-  // 제목 업데이트
   const versionName = document.getElementById("bibleVersion").selectedOptions[0].dataset.name || "성경";
   document.getElementById("modalTitle").textContent = `${versionName} ${currentBook} ${currentChapter}장`;
 
-  // 내용 다시 로드
   const abbr = BookMap[currentBook];
   const contentEl = document.getElementById("modalContent");
   let text = "";
@@ -495,7 +445,6 @@ function changeChapter(delta) {
   }
   contentEl.textContent = text || "해당 장 내용이 없습니다.";
 
-  // 내용 맨 위로 스크롤
   contentEl.scrollTop = 0;
 }
 
@@ -511,7 +460,6 @@ function handleMemoClick(idx) {
   const versionName = document.getElementById("bibleVersion").selectedOptions[0].dataset.name || "성경";
   document.getElementById("modalTitle").textContent = `${versionName} ${currentBook} ${currentChapter}장`;
 
-  // 버튼 상태 업데이트
   const maxCh = BookChapterCount[currentBook] || 150;
   const prevDisabled = (currentChapter <= 1);
   const nextDisabled = (currentChapter >= maxCh);
@@ -521,7 +469,6 @@ function handleMemoClick(idx) {
   document.getElementById("prevChapterBottom").disabled = prevDisabled;
   document.getElementById("nextChapterBottom").disabled = nextDisabled;
 
-  // 내용 로드
   const abbr = BookMap[currentBook];
   const contentEl = document.getElementById("modalContent");
   let text = "";
