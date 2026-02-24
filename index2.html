@@ -392,15 +392,15 @@ function loadBibleData(fileName) {
       if (!r.ok) throw new Error("파일 로드 실패: " + fileName);
       return r.json();
     })
-    .then(data => {
-      BibleData = data;
-      console.log(`${fileName} 로드 완료`);
-      if (data.books && typeof data.books === 'object' && !Array.isArray(data.books)) {
-        console.log("→ 추천 계층 구조 형식 감지 (books → {bookName: {chapter: {verse: text}}})");
-      } else {
-        console.log("→ 예상치 못한 형식. 데이터 확인 요망.");
-      }
-    })
+.then(data => {
+  BibleData = data;
+  console.log(`${fileName} 로드 완료`);
+  if (data.books && typeof data.books === 'object') {
+    console.log("→ books 객체 감지 (책이름 → 장문자열 → 절문자열 형식)");
+    // 테스트용: 창세기 1장 첫 구절 출력
+    console.log("창세기 1:1 예시 →", data.books["창세기"]?.["1"]?.["1"]);
+  }
+})
     .catch(err => console.error(err));
 }
 
@@ -450,12 +450,14 @@ function handleDateClick(startIdx) {
 }
 
 // 구절 가져오기 (두 번째 형식만 지원: books → {bookName: {chapterStr: {verseStr: text}}})
+// 구절 가져오기 (이 저장소 JSON에 완벽 맞춤)
 function getVerses(bookName, chapterNum) {
   const verses = [];
 
-  if (BibleData.books && typeof BibleData.books === 'object' && BibleData.books[bookName]) {
-    const chapterStr = chapterNum.toString();
+  if (BibleData.books && BibleData.books[bookName]) {
+    const chapterStr = chapterNum.toString();  // "1", "2" 등 문자열 키
     const chapterData = BibleData.books[bookName][chapterStr];
+
     if (chapterData && typeof chapterData === 'object') {
       for (const verseStr in chapterData) {
         const verseNum = parseInt(verseStr, 10);
