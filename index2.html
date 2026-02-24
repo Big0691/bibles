@@ -292,9 +292,8 @@
       <button id="nextChapterTop" onclick="changeChapter(1)">다음 ▶</button>
     </div>
 
-    <!-- 새로 추가: 모달 내 검색 영역 -->
     <div class="search-container">
-      <input id="searchInputModal" class="search-input" placeholder="성경 구절 검색 (예: 창1:1-창1:5)" />
+      <input id="searchInputModal" class="search-input" placeholder="단어 또는 구절 검색 (예: 사랑, 요한복음 3:16)" />
       <button id="searchButtonModal" class="search-button">검색</button>
     </div>
 
@@ -307,7 +306,6 @@
   </div>
 </div>
 
-<!-- 새로 추가: 헤더 검색 모달 (헤더 검색 버튼용 별도 모달) -->
 <div class="modal" id="searchModal">
   <div class="modal-content">
     <span class="close" onclick="document.getElementById('searchModal').style.display='none'">×</span>
@@ -315,7 +313,7 @@
     <h3 id="searchModalTitle">성경 검색 결과</h3>
 
     <div class="search-container">
-      <input id="searchInputHeader" class="search-input" placeholder="성경 구절 검색 (예: 창1:1-창1:5)" />
+      <input id="searchInputHeader" class="search-input" placeholder="단어 또는 구절 검색 (예: 사랑, 요한복음 3:16)" />
       <button id="searchButtonHeaderInner" class="search-button">검색</button>
     </div>
 
@@ -324,7 +322,7 @@
 </div>
 
 <script>
-// 데이터
+// 데이터 (기존 그대로)
 const BookList = ["창세기","출애굽기","레위기","민수기","신명기","여호수아","사사기","룻기","사무엘상","사무엘하","열왕기상","열왕기하","역대상","역대하","에스라","느헤미야","에스더","욥기","시편","잠언","전도서","아가","이사야","예레미야","예레미야애가","에스겔","다니엘","호세아","요엘","아모스","오바댜","요나","미가","나훔","하박국","스바냐","학개","스가랴","말라기","마태복음","마가복음","누가복음","요한복음","사도행전","로마서","고린도전서","고린도후서","갈라디아서","에베소서","빌립보서","골로새서","데살로니가전서","데살로니가후서","디모데전서","디모데후서","디도서","빌레몬서","히브리서","야고보서","베드로전서","베드로후서","요한일서","요한이서","요한삼서","유다서","요한계시록"];
 
 const BookMap = {"창세기":"창","출애굽기":"출","레위기":"레","민수기":"민","신명기":"신","여호수아":"수","사사기":"삿","룻기":"룻","사무엘상":"삼상","사무엘하":"삼하","열왕기상":"왕상","열왕기하":"왕하","역대상":"대상","역대하":"대하","에스라":"스","느헤미야":"느","에스더":"에","욥기":"욥","시편":"시","잠언":"잠","전도서":"전","아가":"아","이사야":"사","예레미야":"렘","예레미야애가":"애","에스겔":"겔","다니엘":"단","호세아":"호","요엘":"욜","아모스":"암","오바댜":"옵","요나":"욘","미가":"미","나훔":"나","하박국":"합","스바냐":"습","학개":"학","스가랴":"슥","말라기":"말","마태복음":"마","마가복음":"막","누가복음":"눅","요한복음":"요","사도행전":"행","로마서":"롬","고린도전서":"고전","고린도후서":"고후","갈라디아서":"갈","에베소서":"엡","빌립보서":"빌","골로새서":"골","데살로니가전서":"살전","데살로니가후서":"살후","디모데전서":"딤전","디모데후서":"딤후","디도서":"딛","빌레몬서":"몬","히브리서":"히","야고보서":"약","베드로전서":"벧전","베드로후서":"벧후","요한일서":"요일","요한이서":"요이","요한삼서":"요삼","유다서":"유","요한계시록":"계"};
@@ -335,7 +333,7 @@ let BibleData = {};
 let currentBook = "";
 let currentChapter = 1;
 
-// 월별 일수 계산 함수 (2026년 기준, 2월 28일)
+// 월별 일수 계산 함수
 function getMonthDays(monthStr) {
   const month = parseInt(monthStr.replace("월", ""));
   if (month === 2) return 28;
@@ -343,7 +341,7 @@ function getMonthDays(monthStr) {
   return 31;
 }
 
-// 그리드 생성
+// 그리드 생성 및 이벤트 (기존 그대로)
 const grid = document.getElementById("grid");
 const dateControls = [];
 const memoControls = [];
@@ -390,7 +388,7 @@ function updateChapters() {
   }
 }
 
-// 설정 저장 / 불러오기
+// 설정 저장 / 불러오기 (기존 그대로)
 function saveSettings() {
   const state = {
     month: document.getElementById("month").value,
@@ -419,7 +417,7 @@ function loadSettings() {
   }
 }
 
-// 이벤트
+// 이벤트 연결 (기존 그대로)
 bookSel.addEventListener("change", () => { updateChapters(); saveSettings(); });
 document.getElementById("chapter").addEventListener("change", saveSettings);
 document.getElementById("month").addEventListener("change", saveSettings);
@@ -450,15 +448,14 @@ function loadBibleData(fileName) {
       BibleData = data;
       console.log(`${fileName} 로드 완료`);
       if (data.books && typeof data.books === 'object') {
-        console.log("→ books 객체 감지 (책이름 → 장문자열 → 절문자열 형식)");
-        // 테스트용: 창세기 1장 첫 구절 출력
+        console.log("→ books 객체 감지");
         console.log("창세기 1:1 예시 →", data.books["창세기"]?.["1"]?.["1"]);
       }
     })
     .catch(err => console.error(err));
 }
 
-// 달력 상태 저장/로드
+// 달력 상태 저장/로드 (기존 그대로)
 function saveState() {
   const state = {
     dates: dateControls.map(d => d.textContent.trim()),
@@ -484,7 +481,7 @@ document.getElementById("reset").onclick = () => {
   alert("달력이 초기화되었습니다.");
 };
 
-// 날짜 칸 클릭 → 자동 채우기 (수정됨)
+// 날짜 칸 클릭 → 자동 채우기
 function handleDateClick(startIdx) {
   if (dateControls.some(d => d.textContent.trim() !== "")) return;
 
@@ -492,19 +489,17 @@ function handleDateClick(startIdx) {
   const maxDays = getMonthDays(monthStr);
   let day = 1;
 
-  // 1. 먼저 날짜를 클릭한 칸부터 maxDays까지 모두 채움
   for (let i = startIdx; i < 42; i++) {
     if (day > maxDays) break;
     dateControls[i].textContent = day;
     day++;
   }
 
-  // 2. 그 후, 성경 장을 시작 장부터, 날짜가 채워진 칸 수만큼 (또는 maxCh까지) 메모에 채움
   let ch = parseInt(document.getElementById("chapter").value) || 1;
   const maxCh = BookChapterCount[bookSel.value] || 150;
   let memoIdx = startIdx;
   while (memoIdx < 42 && ch <= maxCh) {
-    if (dateControls[memoIdx].textContent.trim() !== "") {  // 날짜가 있는 칸에만 장 표시
+    if (dateControls[memoIdx].textContent.trim() !== "") {
       memoControls[memoIdx].textContent = ch + "장";
       ch++;
     }
@@ -514,12 +509,12 @@ function handleDateClick(startIdx) {
   saveState();
 }
 
-// 구절 가져오기 (이 저장소 JSON에 완벽 맞춤)
+// 구절 가져오기
 function getVerses(bookName, chapterNum) {
   const verses = [];
 
   if (BibleData.books && BibleData.books[bookName]) {
-    const chapterStr = chapterNum.toString();  // "1", "2" 등 문자열 키
+    const chapterStr = chapterNum.toString();
     const chapterData = BibleData.books[bookName][chapterStr];
 
     if (chapterData && typeof chapterData === 'object') {
@@ -535,22 +530,105 @@ function getVerses(bookName, chapterNum) {
   return verses.sort((a, b) => a.verse - b.verse);
 }
 
-// 범위 구절 가져오기 (검색용: 창1:1-창1:5 형식)
+// ────────────────────────────────────────────────
+// 검색 관련 함수들 (핵심 추가 부분)
+// ────────────────────────────────────────────────
+
+// 단일 구절 파싱 (요한복음 3:16, 창1:1 등)
+function parseSingleVerse(str) {
+  str = str.trim().replace(/\s+/g, ' ');
+
+  const patterns = [
+    /^([가-힣]+)\s*(\d+):(\d+)$/,
+    /^([가-힣]{1,2})\s*(\d+):(\d+)$/,
+    /^([가-힣]+)(\d+):(\d+)$/,
+    /^([가-힣]+) (\d+):(\d+)$/
+  ];
+
+  for (const pattern of patterns) {
+    const match = str.match(pattern);
+    if (match) {
+      let bookInput = match[1];
+      const chapter = parseInt(match[2]);
+      const verse = parseInt(match[3]);
+
+      const abbrToFull = Object.fromEntries(
+        Object.entries(BookMap).map(([full, abbr]) => [abbr, full])
+      );
+      let book = abbrToFull[bookInput] || bookInput;
+
+      if (!BookList.includes(book)) {
+        book = BookList.find(b => 
+          b.includes(bookInput) || b.startsWith(bookInput)
+        ) || book;
+      }
+
+      if (BookList.includes(book)) {
+        return { book, chapter, verse };
+      }
+    }
+  }
+  return null;
+}
+
+// 키워드 검색 (성경 전체 뒤지기)
+function searchKeywordInBible(keyword) {
+  if (!BibleData.books) return [];
+
+  const results = [];
+  const lowerKeyword = keyword.toLowerCase().trim();
+
+  for (const bookName in BibleData.books) {
+    const book = BibleData.books[bookName];
+    for (const chStr in book) {
+      const chapter = book[chStr];
+      for (const vStr in chapter) {
+        const text = chapter[vStr];
+        if (typeof text === 'string' && text.toLowerCase().includes(lowerKeyword)) {
+          results.push({
+            book: bookName,
+            chapter: parseInt(chStr),
+            verse: parseInt(vStr),
+            text
+          });
+        }
+      }
+    }
+  }
+
+  return results.slice(0, 100); // 최대 100건
+}
+
+// 범위 구절 가져오기 (기존)
 function getVersesRange(rangeStr) {
-  const parts = rangeStr.split('-');
+  const parts = rangeStr.split('-').map(p => p.trim());
   if (parts.length !== 2) return [];
+
   const start = parseRef(parts[0]);
   const end = parseRef(parts[1]);
 
-  if (!start || !end || start.book !== end.book || start.chapter !== end.chapter) {
-    return []; // 동일 책/장만 지원 (단순화)
+  if (!start || !end || start.book !== end.book) return [];
+
+  let allVerses = [];
+  const book = start.book;
+
+  for (let ch = start.chapter; ch <= end.chapter; ch++) {
+    const verses = getVerses(book, ch);
+    if (verses.length === 0) continue;
+
+    if (ch === start.chapter) {
+      allVerses.push(...verses.filter(v => v.verse >= start.verse));
+    } else if (ch === end.chapter) {
+      allVerses.push(...verses.filter(v => v.verse <= end.verse));
+    } else {
+      allVerses.push(...verses);
+    }
   }
 
-  const verses = getVerses(start.book, start.chapter);
-  return verses.filter(v => v.verse >= start.verse && v.verse <= end.verse);
+  return allVerses;
 }
 
-// 참조 파싱 (창1:1 형식 → {book: "창세기", chapter:1, verse:1})
+// 참조 파싱 (범위용 - 기존)
 function parseRef(refStr) {
   const match = refStr.match(/^(\w+)(\d+):(\d+)$/);
   if (!match) return null;
@@ -561,7 +639,64 @@ function parseRef(refStr) {
   return book ? {book, chapter, verse} : null;
 }
 
-// 모달 내용 업데이트
+// 통합 검색 실행 함수
+function performSearch(inputEl, contentEl, titleEl) {
+  const query = inputEl.value.trim();
+  if (!query) {
+    contentEl.textContent = "검색어를 입력해주세요.\n\n예시:\n사랑\n하나님\n요한복음 3:16\n창1:1-창1:5\n태초에 하나님이";
+    return;
+  }
+
+  // 1. 범위 검색
+  if (query.includes('-')) {
+    const verses = getVersesRange(query);
+    if (verses.length > 0) {
+      const start = parseRef(query.split('-')[0].trim());
+      if (start) {
+        titleEl.textContent = `${start.book} 범위 (${verses[0].verse}~${verses[verses.length-1].verse}절)`;
+        let text = "";
+        verses.forEach(v => text += `${v.verse}  ${v.text}\n\n`);
+        contentEl.textContent = text.trim() || "내용 없음";
+        contentEl.scrollTop = 0;
+        return;
+      }
+    }
+  }
+
+  // 2. 단일 구절 지정
+  const single = parseSingleVerse(query);
+  if (single) {
+    const verses = getVerses(single.book, single.chapter);
+    const target = verses.find(v => v.verse === single.verse);
+    if (target) {
+      titleEl.textContent = `${single.book} ${single.chapter}장 ${single.verse}절`;
+      contentEl.textContent = `${single.verse}  ${target.text}`;
+      contentEl.scrollTop = 0;
+      return;
+    }
+  }
+
+  // 3. 키워드 검색 (기본)
+  const results = searchKeywordInBible(query);
+
+  if (results.length === 0) {
+    contentEl.textContent = `"${query}" 에 대한 검색 결과가 없습니다.\n\n다른 단어로 다시 시도해 보세요.`;
+    titleEl.textContent = "검색 결과 (0건)";
+    return;
+  }
+
+  titleEl.textContent = `"${query}" 검색 결과 (${results.length}건)`;
+
+  let text = "";
+  results.forEach(r => {
+    text += `${r.book} ${r.chapter}:${r.verse}   ${r.text}\n\n`;
+  });
+
+  contentEl.textContent = text.trim();
+  contentEl.scrollTop = 0;
+}
+
+// 모달 내용 업데이트 (기존)
 function updateModalContent() {
   const versionName = document.getElementById("modalBibleVersion").selectedOptions[0].dataset.name || "성경";
   const titleEl = document.getElementById("modalTitle");
@@ -586,7 +721,7 @@ function updateModalContent() {
   contentEl.scrollTop = 0;
 }
 
-// 장 이동
+// 장 이동 (기존)
 function changeChapter(delta) {
   const newCh = currentChapter + delta;
   const maxCh = BookChapterCount[currentBook] || 150;
@@ -595,18 +730,15 @@ function changeChapter(delta) {
 
   currentChapter = newCh;
 
-  const prevDisabled = (currentChapter <= 1);
-  const nextDisabled = (currentChapter >= maxCh);
-
-  document.getElementById("prevChapterTop").disabled = prevDisabled;
-  document.getElementById("nextChapterTop").disabled = nextDisabled;
-  document.getElementById("prevChapterBottom").disabled = prevDisabled;
-  document.getElementById("nextChapterBottom").disabled = nextDisabled;
+  document.getElementById("prevChapterTop").disabled = (currentChapter <= 1);
+  document.getElementById("nextChapterTop").disabled = (currentChapter >= maxCh);
+  document.getElementById("prevChapterBottom").disabled = (currentChapter <= 1);
+  document.getElementById("nextChapterBottom").disabled = (currentChapter >= maxCh);
 
   updateModalContent();
 }
 
-// 메모 클릭 → 모달 열기
+// 메모 클릭 → 모달 열기 (기존)
 function handleMemoClick(idx) {
   const txt = memoControls[idx].textContent.trim();
   if (!txt) return;
@@ -618,66 +750,38 @@ function handleMemoClick(idx) {
   currentChapter = chNum;
 
   const maxCh = BookChapterCount[currentBook] || 150;
-  const prevDisabled = (currentChapter <= 1);
-  const nextDisabled = (currentChapter >= maxCh);
 
-  document.getElementById("prevChapterTop").disabled = prevDisabled;
-  document.getElementById("nextChapterTop").disabled = nextDisabled;
-  document.getElementById("prevChapterBottom").disabled = prevDisabled;
-  document.getElementById("nextChapterBottom").disabled = nextDisabled;
+  document.getElementById("prevChapterTop").disabled = (currentChapter <= 1);
+  document.getElementById("nextChapterTop").disabled = (currentChapter >= maxCh);
+  document.getElementById("prevChapterBottom").disabled = (currentChapter <= 1);
+  document.getElementById("nextChapterBottom").disabled = (currentChapter >= maxCh);
 
   updateModalContent();
   document.getElementById("modal").style.display = "flex";
 }
 
-// 새로 추가: 읽기 버튼 클릭 → 자유 모드 모달 열기 (선택된 책/장/버전으로)
+// 읽기 버튼
 document.getElementById("readButton").onclick = () => {
   currentBook = bookSel.value;
   currentChapter = parseInt(document.getElementById("chapter").value) || 1;
 
   const maxCh = BookChapterCount[currentBook] || 150;
-  const prevDisabled = (currentChapter <= 1);
-  const nextDisabled = (currentChapter >= maxCh);
 
-  document.getElementById("prevChapterTop").disabled = prevDisabled;
-  document.getElementById("nextChapterTop").disabled = nextDisabled;
-  document.getElementById("prevChapterBottom").disabled = prevDisabled;
-  document.getElementById("nextChapterBottom").disabled = nextDisabled;
+  document.getElementById("prevChapterTop").disabled = (currentChapter <= 1);
+  document.getElementById("nextChapterTop").disabled = (currentChapter >= maxCh);
+  document.getElementById("prevChapterBottom").disabled = (currentChapter <= 1);
+  document.getElementById("nextChapterBottom").disabled = (currentChapter >= maxCh);
 
   updateModalContent();
   document.getElementById("modal").style.display = "flex";
 };
 
-// 새로 추가: 검색 기능 (공통)
-function performSearch(inputEl, contentEl, titleEl) {
-  const query = inputEl.value.trim();
-  if (!query) return;
-
-  const verses = getVersesRange(query);
-  if (verses.length === 0) {
-    contentEl.textContent = "검색 결과가 없습니다. 형식: 창1:1-창1:5";
-    return;
-  }
-
-  const ref = parseRef(query.split('-')[0]);
-  titleEl.textContent = `${document.getElementById("modalBibleVersion").selectedOptions[0].dataset.name || "성경"} ${ref.book} ${ref.chapter}장 (${ref.verse}~${verses[verses.length-1].verse})`;
-
-  let text = "";
-  verses.forEach(v => {
-    text += `${v.verse}  ${v.text}\n\n`;
-  });
-
-  contentEl.textContent = text.trim();
-  contentEl.scrollTop = 0;
-}
-
-// 헤더 검색 버튼 → 검색 모달 열기
+// 검색 버튼 이벤트
 document.getElementById("searchButtonHeader").onclick = () => {
   document.getElementById("searchModal").style.display = "flex";
   document.getElementById("searchInputHeader").focus();
 };
 
-// 헤더 검색 모달 내 검색 버튼
 document.getElementById("searchButtonHeaderInner").onclick = () => {
   performSearch(
     document.getElementById("searchInputHeader"),
@@ -686,7 +790,6 @@ document.getElementById("searchButtonHeaderInner").onclick = () => {
   );
 };
 
-// 모달 내 검색 버튼
 document.getElementById("searchButtonModal").onclick = () => {
   performSearch(
     document.getElementById("searchInputModal"),
