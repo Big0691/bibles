@@ -230,14 +230,14 @@
     <button id="reset">초기화</button>
     <div class="bible-version">
       <select id="bibleVersion">
-        <option value="kornkrv.json" data-name="개역개정판" selected>개역개정판</option>
-        <option value="korhrv.json" data-name="개역한글">개역한글</option>
-        <option value="korhkjv.json" data-name="흠정역">흠정역</option>
-        <option value="kornrsv.json" data-name="새번역">새번역</option>
-        <option value="koreasy.json" data-name="쉬운성경">쉬운성경</option>
-        <option value="kordob.json" data-name="우리말성경">우리말성경</option>
-        <option value="kortkv.json" data-name="현대어">현대어</option>
-        <option value="korklb.json" data-name="현대인">현대인</option>
+        <option value="kornkrvs.json" data-name="개역개정판" selected>개역개정판</option>
+        <option value="korhrvs.json" data-name="개역한글">개역한글</option>
+        <option value="korhkjvs.json" data-name="흠정역">흠정역</option>
+        <option value="kornrsvs.json" data-name="새번역">새번역</option>
+        <option value="koreasys.json" data-name="쉬운성경">쉬운성경</option>
+        <option value="kordobs.json" data-name="우리말성경">우리말성경</option>
+        <option value="kortkvs.json" data-name="현대어">현대어</option>
+        <option value="korklbs.json" data-name="현대인">현대인</option>
       </select>
     </div>
   </div>
@@ -251,14 +251,14 @@
     
     <div class="modal-bible-version">
       <select id="modalBibleVersion">
-        <option value="kornkrv.json" data-name="개역개정판" selected>개역개정판</option>
-        <option value="korhrv.json" data-name="개역한글">개역한글</option>
-        <option value="korhkjv.json" data-name="흠정역">흠정역</option>
-        <option value="kornrsv.json" data-name="새번역">새번역</option>
-        <option value="koreasy.json" data-name="쉬운성경">쉬운성경</option>
-        <option value="kordob.json" data-name="우리말성경">우리말성경</option>
-        <option value="kortkv.json" data-name="현대어">현대어</option>
-        <option value="korklb.json" data-name="현대인">현대인</option>
+        <option value="kornkrvs.json" data-name="개역개정판" selected>개역개정판</option>
+        <option value="korhrvs.json" data-name="개역한글">개역한글</option>
+        <option value="korhkjvs.json" data-name="흠정역">흠정역</option>
+        <option value="kornrsvs.json" data-name="새번역">새번역</option>
+        <option value="koreasys.json" data-name="쉬운성경">쉬운성경</option>
+        <option value="kordobs.json" data-name="우리말성경">우리말성경</option>
+        <option value="kortkvs.json" data-name="현대어">현대어</option>
+        <option value="korklbs.json" data-name="현대인">현대인</option>
       </select>
     </div>
 
@@ -392,15 +392,15 @@ function loadBibleData(fileName) {
       if (!r.ok) throw new Error("파일 로드 실패: " + fileName);
       return r.json();
     })
-    .then(data => {
-      BibleData = data;
-      console.log(`${fileName} 로드 완료`);
-      if (data.books && Array.isArray(data.books)) {
-        console.log("→ 계층 구조 형식 감지 (books → chapters → verses)");
-      } else {
-        console.log("→ 기존 평평한 키 형식으로 보임 (예: \"창1:1\")");
-      }
-    })
+.then(data => {
+  BibleData = data;
+  console.log(`${fileName} 로드 완료`);
+  if (data.books && typeof data.books === 'object') {
+    console.log("→ books 객체 감지 (책이름 → 장문자열 → 절문자열 형식)");
+    // 테스트용: 창세기 1장 첫 구절 출력
+    console.log("창세기 1:1 예시 →", data.books["창세기"]?.["1"]?.["1"]);
+  }
+})
     .catch(err => console.error(err));
 }
 
@@ -449,33 +449,21 @@ function handleDateClick(startIdx) {
   saveState();
 }
 
-// 구절 가져오기 (새 형식 + 구형 형식 모두 지원)
+// 구절 가져오기 (두 번째 형식만 지원: books → {bookName: {chapterStr: {verseStr: text}}})
+// 구절 가져오기 (이 저장소 JSON에 완벽 맞춤)
 function getVerses(bookName, chapterNum) {
-  // 1. 새 계층 구조 우선 체크
-  if (BibleData.books && Array.isArray(BibleData.books)) {
-    const bookObj = BibleData.books.find(b => b.name === bookName);
-    if (bookObj) {
-      const chapObj = bookObj.chapters.find(c => c.chapter === chapterNum);
-      if (chapObj && Array.isArray(chapObj.verses)) {
-        return chapObj.verses
-          .filter(v => v.verse && v.text)
-          .sort((a, b) => a.verse - b.verse);
-      }
-    }
-  }
-
-  // 2. fallback: 기존 "창1:1" 형식
-  const abbr = BookMap[bookName];
-  if (!abbr) return [];
-
-  const prefix = abbr + chapterNum + ":";
   const verses = [];
 
-  for (let key in BibleData) {
-    if (key.startsWith(prefix)) {
-      const verseNum = parseInt(key.split(":")[1], 10);
-      if (!isNaN(verseNum)) {
-        verses.push({ verse: verseNum, text: BibleData[key] });
+  if (BibleData.books && BibleData.books[bookName]) {
+    const chapterStr = chapterNum.toString();  // "1", "2" 등 문자열 키
+    const chapterData = BibleData.books[bookName][chapterStr];
+
+    if (chapterData && typeof chapterData === 'object') {
+      for (const verseStr in chapterData) {
+        const verseNum = parseInt(verseStr, 10);
+        if (!isNaN(verseNum)) {
+          verses.push({ verse: verseNum, text: chapterData[verseStr] });
+        }
       }
     }
   }
@@ -483,7 +471,7 @@ function getVerses(bookName, chapterNum) {
   return verses.sort((a, b) => a.verse - b.verse);
 }
 
-// 모달 내용 업데이트 (핵심 수정 부분)
+// 모달 내용 업데이트
 function updateModalContent() {
   const versionName = document.getElementById("modalBibleVersion").selectedOptions[0].dataset.name || "성경";
   const titleEl = document.getElementById("modalTitle");
