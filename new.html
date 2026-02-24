@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>성경 읽기 서비스</title>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; line-height: 1.6; padding: 20px; max-width: 800px; margin: auto; background-color: #f9f9f9; }
+        h1 { text-align: center; color: #333; }
+        .controls { margin-bottom: 20px; text-align: center; position: sticky; top: 0; background: #fff; padding: 10px; border-bottom: 1px solid #ddd; }
+        select { padding: 8px; font-size: 16px; border-radius: 5px; }
+        #bible-content { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .book-title { color: #2c3e50; border-bottom: 2px solid #2c3e50; margin-top: 40px; padding-bottom: 5px; }
+        .chapter-title { color: #e67e22; margin-top: 25px; font-size: 1.2em; border-left: 5px solid #e67e22; padding-left: 10px; }
+        .verse { margin-bottom: 8px; }
+        .verse-num { font-weight: bold; color: #7f8c8d; margin-right: 8px; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+
+    <h1>📖 성경 읽기</h1>
+
+    <div class="controls">
+        <label for="bible-version">성경 선택: </label>
+        <select id="bible-version" onchange="loadBible(this.value)">
+            <option value="koreasys">우리말성경</option>
+            <option value="gaekyuk">개역개정</option>
+            <!-- 필요한 성경 버전을 여기에 추가하세요 -->
+        </select>
+    </div>
+
+    <div id="bible-content">
+        <p style="text-align: center;">성경 데이터를 불러오는 중...</p>
+    </div>
+
+    <script>
+        // 페이지 로드 시 기본값으로 데이터 불러오기
+        window.onload = () => loadBible('koreasys');
+
+        function loadBible(version) {
+            const contentDiv = document.getElementById('bible-content');
+            contentDiv.innerHTML = '<p style="text-align: center;">데이터를 불러오는 중입니다...</p>';
+
+            // GitHub JSON 파일 경로 (사용자 설정에 맞춤)
+            const url = `https://raw.githubusercontent.com{version}.json`;
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) throw new Error('파일을 찾을 수 없습니다.');
+                    return response.json();
+                })
+                .then(data => {
+                    contentDiv.innerHTML = ''; // 화면 초기화
+
+                    // 상단에 번역판 정보 표시
+                    if (data.translation) {
+                        const transInfo = document.createElement('p');
+                        transInfo.style.textAlign = 'right';
+                        transInfo.style.color = '#888';
+                        transInfo.innerText = `번역: ${data.translation}`;
+                        contentDiv.appendChild(transInfo);
+                    }
+
+                    const books = data.books;
+
+                    // 1단계: 책(Book) 순회 (예: 창세기)
+                    for (const bookName in books) {
+                        const bookHeader = document.createElement('h2');
+                        bookHeader.className = 'book-title';
+                        bookHeader.innerText = bookName;
+                        contentDiv.appendChild(bookHeader);
+
+                        const chapters = books[bookName];
+
+                        // 2단계: 장(Chapter) 순회 (예: 1장, 2장)
+                        for (const chapterNum in chapters) {
+                            const chapterHeader = document.createElement('h3');
+                            chapterHeader.className = 'chapter-title';
+                            chapterHeader.innerText = `${chapterNum}장`;
+                            contentDiv.appendChild(chapterHeader);
+
+                            const verses = chapters[chapterNum];
+
+                            // 3단계: 절(Verse) 순회 (예: 1절, 2절)
+                            for (const verseNum in verses) {
+                                const versePara = document.createElement('div');
+                                versePara.className = 'verse';
+                                versePara.innerHTML = `<span class="verse-num">${verseNum}</span>${verses[verseNum]}`;
+                                contentDiv.appendChild(versePara);
+                            }
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    contentDiv.innerHTML = `<p style="color:red; text-align:center;">오류: 데이터를 불러올 수 없습니다. (${error.message})</p>`;
+                });
+        }
+    </script>
+</body>
+</html>
