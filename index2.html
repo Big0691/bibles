@@ -203,12 +203,52 @@
       background-size: 10px;
       appearance: none;
     }
+
+    /* 새로 추가: 제목 스타일 수정 (더 작게) */
+    h2 {
+      font-size: 0.95rem; /* 더 작게 조정 */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    /* 새로 추가: 검색 입력/버튼 스타일 */
+    .search-container {
+      display: flex;
+      gap: 6px;
+      margin: 8px 0;
+    }
+    .search-input {
+      flex: 1;
+      padding: 6px 8px;
+      font-size: 13px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+    }
+    .search-button {
+      padding: 6px 12px;
+      font-size: 13px;
+      background: #2ecc71;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .search-button:hover {
+      background: #27ae60;
+    }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h2>매일 성경읽기 달력</h2>
+  <!-- 제목 수정: 더 작게, 오른쪽에 읽기 버튼과 검색 버튼 추가 -->
+  <h2>
+    매일 성경읽기 달력
+    <button id="readButton">읽기</button>
+    <button id="searchButtonHeader" class="search-button">검색</button>
+  </h2>
 
   <div class="header">
     <select id="month">
@@ -242,7 +282,7 @@
     </div>
   </div>
 
-  <div class="version-info">(2026-02-18) ver 1.8 (8=성경종류)</div>
+  <div class="version-info">(260218~260218) ver 2.5.8 (8=성경종류)</div>
 </div>
 
 <div class="modal" id="modal">
@@ -268,12 +308,34 @@
       <button id="nextChapterTop" onclick="changeChapter(1)">다음 ▶</button>
     </div>
 
+    <!-- 새로 추가: 모달 내 검색 영역 -->
+    <div class="search-container">
+      <input id="searchInputModal" class="search-input" placeholder="성경 구절 검색 (예: 창1:1-창1:5)" />
+      <button id="searchButtonModal" class="search-button">검색</button>
+    </div>
+
     <pre id="modalContent" style="white-space: pre-wrap; font-family: inherit; line-height: 1.6;"></pre>
 
     <div class="chapter-nav-bottom">
       <button id="prevChapterBottom" onclick="changeChapter(-1)">◀ 이전</button>
       <button id="nextChapterBottom" onclick="changeChapter(1)">다음 ▶</button>
     </div>
+  </div>
+</div>
+
+<!-- 새로 추가: 헤더 검색 모달 (헤더 검색 버튼용 별도 모달) -->
+<div class="modal" id="searchModal">
+  <div class="modal-content">
+    <span class="close" onclick="document.getElementById('searchModal').style.display='none'">×</span>
+    
+    <h3 id="searchModalTitle">성경 검색 결과</h3>
+
+    <div class="search-container">
+      <input id="searchInputHeader" class="search-input" placeholder="성경 구절 검색 (예: 창1:1-창1:5)" />
+      <button id="searchButtonHeaderInner" class="search-button">검색</button>
+    </div>
+
+    <pre id="searchModalContent" style="white-space: pre-wrap; font-family: inherit; line-height: 1.6;"></pre>
   </div>
 </div>
 
@@ -489,6 +551,32 @@ function getVerses(bookName, chapterNum) {
   return verses.sort((a, b) => a.verse - b.verse);
 }
 
+// 범위 구절 가져오기 (검색용: 창1:1-창1:5 형식)
+function getVersesRange(rangeStr) {
+  const parts = rangeStr.split('-');
+  if (parts.length !== 2) return [];
+  const start = parseRef(parts[0]);
+  const end = parseRef(parts[1]);
+
+  if (!start || !end || start.book !== end.book || start.chapter !== end.chapter) {
+    return []; // 동일 책/장만 지원 (단순화)
+  }
+
+  const verses = getVerses(start.book, start.chapter);
+  return verses.filter(v => v.verse >= start.verse && v.verse <= end.verse);
+}
+
+// 참조 파싱 (창1:1 형식 → {book: "창세기", chapter:1, verse:1})
+function parseRef(refStr) {
+  const match = refStr.match(/^(\w+)(\d+):(\d+)$/);
+  if (!match) return null;
+  const abbr = match[1];
+  const chapter = parseInt(match[2]);
+  const verse = parseInt(match[3]);
+  const book = Object.keys(BookMap).find(key => BookMap[key] === abbr);
+  return book ? {book, chapter, verse} : null;
+}
+
 // 모달 내용 업데이트
 function updateModalContent() {
   const versionName = document.getElementById("modalBibleVersion").selectedOptions[0].dataset.name || "성경";
@@ -557,6 +645,71 @@ function handleMemoClick(idx) {
   updateModalContent();
   document.getElementById("modal").style.display = "flex";
 }
+
+// 새로 추가: 읽기 버튼 클릭 → 자유 모드 모달 열기 (선택된 책/장/버전으로)
+document.getElementById("readButton").onclick = () => {
+  currentBook = bookSel.value;
+  currentChapter = parseInt(document.getElementById("chapter").value) || 1;
+
+  const maxCh = BookChapterCount[currentBook] || 150;
+  const prevDisabled = (currentChapter <= 1);
+  const nextDisabled = (currentChapter >= maxCh);
+
+  document.getElementById("prevChapterTop").disabled = prevDisabled;
+  document.getElementById("nextChapterTop").disabled = nextDisabled;
+  document.getElementById("prevChapterBottom").disabled = prevDisabled;
+  document.getElementById("nextChapterBottom").disabled = nextDisabled;
+
+  updateModalContent();
+  document.getElementById("modal").style.display = "flex";
+};
+
+// 새로 추가: 검색 기능 (공통)
+function performSearch(inputEl, contentEl, titleEl) {
+  const query = inputEl.value.trim();
+  if (!query) return;
+
+  const verses = getVersesRange(query);
+  if (verses.length === 0) {
+    contentEl.textContent = "검색 결과가 없습니다. 형식: 창1:1-창1:5";
+    return;
+  }
+
+  const ref = parseRef(query.split('-')[0]);
+  titleEl.textContent = `${document.getElementById("modalBibleVersion").selectedOptions[0].dataset.name || "성경"} ${ref.book} ${ref.chapter}장 (${ref.verse}~${verses[verses.length-1].verse})`;
+
+  let text = "";
+  verses.forEach(v => {
+    text += `${v.verse}  ${v.text}\n\n`;
+  });
+
+  contentEl.textContent = text.trim();
+  contentEl.scrollTop = 0;
+}
+
+// 헤더 검색 버튼 → 검색 모달 열기
+document.getElementById("searchButtonHeader").onclick = () => {
+  document.getElementById("searchModal").style.display = "flex";
+  document.getElementById("searchInputHeader").focus();
+};
+
+// 헤더 검색 모달 내 검색 버튼
+document.getElementById("searchButtonHeaderInner").onclick = () => {
+  performSearch(
+    document.getElementById("searchInputHeader"),
+    document.getElementById("searchModalContent"),
+    document.getElementById("searchModalTitle")
+  );
+};
+
+// 모달 내 검색 버튼
+document.getElementById("searchButtonModal").onclick = () => {
+  performSearch(
+    document.getElementById("searchInputModal"),
+    document.getElementById("modalContent"),
+    document.getElementById("modalTitle")
+  );
+};
 
 // 초기 로드
 loadSettings();
