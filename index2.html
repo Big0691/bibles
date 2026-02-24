@@ -187,6 +187,22 @@
       flex: 1;
       line-height: 1.3;
     }
+    .modal-bible-version {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+    .modal-bible-version select {
+      width: auto;
+      min-width: 90px;
+      max-width: 140px;
+      padding: 5px 20px 5px 6px;
+      font-size: 12px;
+      border-radius: 6px;
+      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpolygon points='0,0 12,0 6,12' fill='%23333'/%3E%3C/svg%3E") no-repeat right 6px center;
+      background-size: 10px;
+      appearance: none;
+    }
   </style>
 </head>
 <body>
@@ -233,6 +249,19 @@
   <div class="modal-content">
     <span class="close" onclick="document.getElementById('modal').style.display='none'">×</span>
     
+    <div class="modal-bible-version">
+      <select id="modalBibleVersion">
+        <option value="kornkrvs.json" data-name="개역개정판" selected>개역개정판</option>
+        <option value="korhrvs.json" data-name="개역한글">개역한글</option>
+        <option value="korhkjvs.json" data-name="흠정역">흠정역</option>
+        <option value="kornrsvs.json" data-name="새번역">새번역</option>
+        <option value="koreasys.json" data-name="쉬운성경">쉬운성경</option>
+        <option value="kordobs.json" data-name="우리말성경">우리말성경</option>
+        <option value="kortkvs.json" data-name="현대어">현대어</option>
+        <option value="korklbs.json" data-name="현대인">현대인</option>
+      </select>
+    </div>
+
     <div class="chapter-nav">
       <button id="prevChapterTop" onclick="changeChapter(-1)">◀ 이전</button>
       <h3 id="modalTitle"></h3>
@@ -249,6 +278,7 @@
 </div>
 
 <script>
+// 데이터
 const BookList = ["창세기","출애굽기","레위기","민수기","신명기","여호수아","사사기","룻기","사무엘상","사무엘하","열왕기상","열왕기하","역대상","역대하","에스라","느헤미야","에스더","욥기","시편","잠언","전도서","아가","이사야","예레미야","예레미야애가","에스겔","다니엘","호세아","요엘","아모스","오바댜","요나","미가","나훔","하박국","스바냐","학개","스가랴","말라기","마태복음","마가복음","누가복음","요한복음","사도행전","로마서","고린도전서","고린도후서","갈라디아서","에베소서","빌립보서","골로새서","데살로니가전서","데살로니가후서","디모데전서","디모데후서","디도서","빌레몬서","히브리서","야고보서","베드로전서","베드로후서","요한일서","요한이서","요한삼서","유다서","요한계시록"];
 
 const BookMap = {"창세기":"창","출애굽기":"출","레위기":"레","민수기":"민","신명기":"신","여호수아":"수","사사기":"삿","룻기":"룻","사무엘상":"삼상","사무엘하":"삼하","열왕기상":"왕상","열왕기하":"왕하","역대상":"대상","역대하":"대하","에스라":"스","느헤미야":"느","에스더":"에","욥기":"욥","시편":"시","잠언":"잠","전도서":"전","아가":"아","이사야":"사","예레미야":"렘","예레미야애가":"애","에스겔":"겔","다니엘":"단","호세아":"호","요엘":"욜","아모스":"암","오바댜":"옵","요나":"욘","미가":"미","나훔":"나","하박국":"합","스바냐":"습","학개":"학","스가랴":"슥","말라기":"말","마태복음":"마","마가복음":"막","누가복음":"눅","요한복음":"요","사도행전":"행","로마서":"롬","고린도전서":"고전","고린도후서":"고후","갈라디아서":"갈","에베소서":"엡","빌립보서":"빌","골로새서":"골","데살로니가전서":"살전","데살로니가후서":"살후","디모데전서":"딤전","디모데후서":"딤후","디도서":"딛","빌레몬서":"몬","히브리서":"히","야고보서":"약","베드로전서":"벧전","베드로후서":"벧후","요한일서":"요일","요한이서":"요이","요한삼서":"요삼","유다서":"유","요한계시록":"계"};
@@ -259,6 +289,7 @@ let BibleData = {};
 let currentBook = "";
 let currentChapter = 1;
 
+// 그리드 생성
 const grid = document.getElementById("grid");
 const dateControls = [];
 const memoControls = [];
@@ -283,6 +314,7 @@ for (let i = 0; i < 42; i++) {
   });
 }
 
+// 책 드롭다운 채우기
 const bookSel = document.getElementById("book");
 BookList.forEach(b => {
   const opt = document.createElement("option");
@@ -290,6 +322,7 @@ BookList.forEach(b => {
   bookSel.appendChild(opt);
 });
 
+// 장 목록 갱신
 function updateChapters() {
   const book = bookSel.value;
   const max = BookChapterCount[book] || 150;
@@ -303,6 +336,7 @@ function updateChapters() {
   }
 }
 
+// 설정 저장 / 불러오기
 function saveSettings() {
   const state = {
     month: document.getElementById("month").value,
@@ -327,17 +361,31 @@ function loadSettings() {
   }
   if (state.bibleVersion) {
     document.getElementById("bibleVersion").value = state.bibleVersion;
+    document.getElementById("modalBibleVersion").value = state.bibleVersion;
   }
 }
 
+// 이벤트
 bookSel.addEventListener("change", () => { updateChapters(); saveSettings(); });
 document.getElementById("chapter").addEventListener("change", saveSettings);
 document.getElementById("month").addEventListener("change", saveSettings);
 document.getElementById("bibleVersion").addEventListener("change", (e) => {
-  loadBibleData(e.target.value);
+  const file = e.target.value;
+  document.getElementById("modalBibleVersion").value = file;
+  loadBibleData(file);
   saveSettings();
 });
 
+document.getElementById("modalBibleVersion").addEventListener("change", (e) => {
+  const file = e.target.value;
+  document.getElementById("bibleVersion").value = file;
+  loadBibleData(file).then(() => {
+    updateModalContent();
+  });
+  saveSettings();
+});
+
+// 성경 JSON 로드
 function loadBibleData(fileName) {
   return fetch(fileName)
     .then(r => {
@@ -347,14 +395,16 @@ function loadBibleData(fileName) {
     .then(data => {
       BibleData = data;
       console.log(`${fileName} 로드 완료`);
-      return data;
+      if (data.books && typeof data.books === 'object' && !Array.isArray(data.books)) {
+        console.log("→ 추천 계층 구조 형식 감지 (books → {bookName: {chapter: {verse: text}}})");
+      } else {
+        console.log("→ 예상치 못한 형식. 데이터 확인 요망.");
+      }
     })
-    .catch(err => {
-      console.error(err);
-      alert("성경 파일 로드 실패: " + fileName);
-    });
+    .catch(err => console.error(err));
 }
 
+// 달력 상태 저장/로드
 function saveState() {
   const state = {
     dates: dateControls.map(d => d.textContent.trim()),
@@ -372,6 +422,7 @@ function loadState() {
   }
 }
 
+// 초기화 버튼
 document.getElementById("reset").onclick = () => {
   dateControls.forEach(d => d.textContent = "");
   memoControls.forEach(m => m.textContent = "");
@@ -379,6 +430,7 @@ document.getElementById("reset").onclick = () => {
   alert("달력이 초기화되었습니다.");
 };
 
+// 날짜 칸 클릭 → 자동 채우기
 function handleDateClick(startIdx) {
   if (dateControls.some(d => d.textContent.trim() !== "")) return;
 
@@ -397,104 +449,29 @@ function handleDateClick(startIdx) {
   saveState();
 }
 
+// 구절 가져오기 (두 번째 형식만 지원: books → {bookName: {chapterStr: {verseStr: text}}})
 function getVerses(bookName, chapterNum) {
   const verses = [];
-  const chapStr = String(chapterNum);
 
-  // Case 1: books 배열 형태
-  if (BibleData.books && Array.isArray(BibleData.books)) {
-    const bookObj = BibleData.books.find(b => b.name === bookName);
-    if (bookObj && bookObj.chapters) {
-      const chapData = bookObj.chapters[chapStr];
-      if (chapData) {
-        if (Array.isArray(chapData)) {
-          // 드물게 verses가 배열인 경우
-          chapData.forEach((text, idx) => {
-            if (text) verses.push({ verse: idx + 1, text });
-          });
-        } else {
-          // 일반 객체 형태
-          for (let v in chapData) {
-            const verseNum = parseInt(v, 10);
-            if (!isNaN(verseNum)) {
-              verses.push({ verse: verseNum, text: chapData[v] });
-            }
-          }
-        }
-        return verses.sort((a,b) => a.verse - b.verse);
-      }
-    }
-  }
-
-  // Case 2: 최상위가 책 이름인 경우 (가장 흔함)
-  if (BibleData[bookName]) {
-    const bookData = BibleData[bookName];
-    let chapData;
-
-    if (bookData.chapters) {
-      chapData = bookData.chapters[chapStr];
-    } else if (bookData[chapStr]) {
-      chapData = bookData[chapStr];  // chapters 키 생략된 경우
-    }
-
-    if (chapData) {
-      if (Array.isArray(chapData)) {
-        chapData.forEach((text, idx) => {
-          if (text) verses.push({ verse: idx + 1, text });
-        });
-      } else {
-        for (let v in chapData) {
-          const verseNum = parseInt(v, 10);
-          if (!isNaN(verseNum)) {
-            verses.push({ verse: verseNum, text: chapData[v] });
-          }
-        }
-      }
-      return verses.sort((a,b) => a.verse - b.verse);
-    }
-  }
-
-  // Case 3: 단일 책 객체 (name + chapters)
-  if (BibleData.name === bookName && BibleData.chapters) {
-    const chapData = BibleData.chapters[chapStr];
-    if (chapData) {
-      if (Array.isArray(chapData)) {
-        chapData.forEach((text, idx) => {
-          if (text) verses.push({ verse: idx + 1, text });
-        });
-      } else {
-        for (let v in chapData) {
-          const verseNum = parseInt(v, 10);
-          if (!isNaN(verseNum)) {
-            verses.push({ verse: verseNum, text: chapData[v] });
-          }
-        }
-      }
-      return verses.sort((a,b) => a.verse - b.verse);
-    }
-  }
-
-  // Case 4: fallback 평평한 "창1:1" 형식 (거의 안 쓰임)
-  const abbr = BookMap[bookName];
-  if (abbr) {
-    const prefix = abbr + chapterNum + ":";
-    for (let key in BibleData) {
-      if (key.startsWith(prefix)) {
-        const verseNum = parseInt(key.split(":")[1], 10);
+  if (BibleData.books && typeof BibleData.books === 'object' && BibleData.books[bookName]) {
+    const chapterStr = chapterNum.toString();
+    const chapterData = BibleData.books[bookName][chapterStr];
+    if (chapterData && typeof chapterData === 'object') {
+      for (const verseStr in chapterData) {
+        const verseNum = parseInt(verseStr, 10);
         if (!isNaN(verseNum)) {
-          verses.push({ verse: verseNum, text: BibleData[key] });
+          verses.push({ verse: verseNum, text: chapterData[verseStr] });
         }
       }
     }
-    if (verses.length > 0) return verses.sort((a,b) => a.verse - b.verse);
   }
 
-  return [];
+  return verses.sort((a, b) => a.verse - b.verse);
 }
 
+// 모달 내용 업데이트
 function updateModalContent() {
-  const versionSelect = document.getElementById("bibleVersion");
-  const versionName = versionSelect.selectedOptions[0]?.dataset.name || "성경";
+  const versionName = document.getElementById("modalBibleVersion").selectedOptions[0].dataset.name || "성경";
   const titleEl = document.getElementById("modalTitle");
   titleEl.textContent = `${versionName} ${currentBook} ${currentChapter}장`;
 
@@ -504,7 +481,7 @@ function updateModalContent() {
   const verses = getVerses(currentBook, currentChapter);
 
   if (verses.length === 0) {
-    contentEl.textContent = "해당 장의 내용이 없습니다.\n(콘솔(F12)에서 구조를 확인해 보세요)";
+    contentEl.textContent = "해당 장의 내용이 없습니다.";
     return;
   }
 
@@ -513,10 +490,11 @@ function updateModalContent() {
     text += `${v.verse}  ${v.text}\n\n`;
   });
 
-  contentEl.textContent = text.trimEnd();
+  contentEl.textContent = text.trim();
   contentEl.scrollTop = 0;
 }
 
+// 장 이동
 function changeChapter(delta) {
   const newCh = currentChapter + delta;
   const maxCh = BookChapterCount[currentBook] || 150;
@@ -536,6 +514,7 @@ function changeChapter(delta) {
   updateModalContent();
 }
 
+// 메모 클릭 → 모달 열기
 function handleMemoClick(idx) {
   const txt = memoControls[idx].textContent.trim();
   if (!txt) return;
