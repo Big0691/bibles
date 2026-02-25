@@ -734,13 +734,23 @@ window.addEventListener('load', () => {
   updateChapters();
   initModalBookChapter();
 });
-  document.getElementById("searchButtonHeader").onclick = () => {
+  
+setTimeout(() => {
+
+document.getElementById("searchButtonHeader").onclick = function() {
   document.getElementById("searchModal").style.display = "flex";
 };
 
-document.getElementById("searchButtonModal").onclick = () => {
+document.getElementById("searchButtonModal").onclick = function() {
+  document.getElementById("modal").style.display = "none";
   document.getElementById("searchModal").style.display = "flex";
 };
+
+document.getElementById("searchButtonHeaderInner").onclick = function() {
+  alert("검색 버튼 눌림");
+};
+
+},500);
 </script>
 </body>
 </html>
