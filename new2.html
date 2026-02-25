@@ -5,43 +5,290 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>매일 성경읽기 달력</title>
   <style>
-    body { font-family: "맑은 고딕", Malgun Gothic, "돋움", dotum, sans-serif; margin: 0; padding: 12px; background: #f0f4f8; color: #333; }
-    .container { max-width: 400px; margin: 0 auto; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 3px 12px rgba(0,0,0,0.08); }
-    h2 { margin: 0 0 14px; color: #2c3e50; font-size: 0.95rem; font-weight: 600; text-align: center; }
-    .title-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-    .title-text { flex: 1; text-align: center; font-size: 1.05rem; }
-    button { padding: 6px 12px; font-size: 13px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; white-space: nowrap; }
-    button:hover { background: #2980b9; }
-    .search-button { background: #2ecc71; }
-    .search-button:hover { background: #27ae60; }
-    .header { display: flex; gap: 6px; margin-bottom: 14px; justify-content: space-between; align-items: center; }
-    .header select { flex: 1; font-size: 13px; padding: 6px 8px; }
-    .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; color: #555; margin: 6px 0; font-size: 0.85rem; }
-    .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
-    .cell { border: 1px solid #ddd; border-radius: 5px; background: #fafafa; min-height: 48px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 3px; cursor: pointer; }
-    .cell:hover { background: #e8f4fd; }
-    .date { font-weight: bold; font-size: 12px; color: #2c3e50; }
-    .memo { font-size: 10px; color: #0066cc; font-weight: bold; background: #e6f2ff; width: 100%; text-align: center; border-radius: 3px; padding: 1px 0; }
-    .footer { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; gap: 6px; }
-    .footer button { font-size: 13px; padding: 6px 12px; }
-    .bible-version { flex: 1; text-align: right; }
-    .bible-version select { width: auto; min-width: 90px; max-width: 140px; padding: 5px 20px 5px 6px; font-size: 12px; border-radius: 6px; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpolygon points='0,0 12,0 6,12' fill='%23333'/%3E%3C/svg%3E") no-repeat right 6px center; background-size: 10px; appearance: none; }
-    .version-info { text-align: center; font-size: 10px; color: #888; margin-top: 6px; }
-    @media (max-width: 480px) { .header, .footer { gap: 5px; } .header select, .bible-version select { font-size: 11.5px; } .footer button { font-size: 12px; padding: 5px 10px; } }
-    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
-    .modal-content { background: white; padding: 16px; max-width: 90%; max-height: 85vh; overflow-y: auto; border-radius: 10px; box-shadow: 0 8px 25px rgba(0,0,0,0.25); position: relative; }
-    .close { position: absolute; top: 8px; right: 12px; font-size: 26px; cursor: pointer; color: #aaa; }
-    .close:hover { color: #333; }
-    .chapter-nav, .chapter-nav-bottom { display: flex; justify-content: space-between; margin: 8px 0; gap: 6px; }
-    .chapter-nav button, .chapter-nav-bottom button { padding: 6px 12px; font-size: 12px; min-width: 70px; flex: 1; }
-    #modalTitle { font-size: 16px; margin: 0; text-align: center; flex: 1; line-height: 1.3; }
-    .modal-bible-version { display: flex; justify-content: center; margin-bottom: 8px; }
-    .modal-bible-version select { width: auto; min-width: 90px; max-width: 140px; padding: 5px 20px 5px 6px; font-size: 12px; border-radius: 6px; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpolygon points='0,0 12,0 6,12' fill='%23333'/%3E%3C/svg%3E") no-repeat right 6px center; background-size: 10px; appearance: none; }
-    .range-select { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
-    .range-select select { flex: 1; padding: 6px; font-size: 13px; }
-    .range-select label { min-width: 50px; font-size: 14px; font-weight: bold; }
-    .search-container { display: flex; gap: 6px; margin: 8px 0; }
-    .search-input { flex: 1; padding: 6px 8px; font-size: 13px; border: 1px solid #ddd; border-radius: 6px; }
+/* 기본 스타일 */
+body {
+  font-family: "맑은 고딕", Malgun Gothic, "돋움", dotum, sans-serif;
+  margin: 0;
+  padding: 12px;
+  background: #f0f4f8;
+  color: #333;
+}
+
+.container {
+  max-width: 400px;
+  margin: 0 auto;
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+}
+
+/* 제목 & 타이틀 바 */
+h2 {
+  margin: 0 0 14px;
+  color: #2c3e50;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.title-text {
+  flex: 1;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+/* 버튼 공통 */
+button {
+  padding: 6px 12px;
+  font-size: 13px;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+button:hover {
+  background: #2980b9;
+}
+
+.search-button {
+  background: #2ecc71;
+}
+
+.search-button:hover {
+  background: #27ae60;
+}
+
+/* 헤더 (월/책/장 선택) */
+.header {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header select {
+  flex: 1;
+  font-size: 13px;
+  padding: 6px 8px;
+}
+
+/* 요일 라벨 */
+.weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-weight: bold;
+  color: #555;
+  margin: 6px 0;
+  font-size: 0.85rem;
+}
+
+/* 달력 그리드 */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.cell {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background: #fafafa;
+  min-height: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px;
+  cursor: pointer;
+}
+
+.cell:hover {
+  background: #e8f4fd;
+}
+
+.date {
+  font-weight: bold;
+  font-size: 12px;
+  color: #2c3e50;
+}
+
+.memo {
+  font-size: 10px;
+  color: #0066cc;
+  font-weight: bold;
+  background: #e6f2ff;
+  width: 100%;
+  text-align: center;
+  border-radius: 3px;
+  padding: 1px 0;
+}
+
+/* 푸터 */
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 14px;
+  gap: 6px;
+}
+
+.footer button {
+  font-size: 13px;
+  padding: 6px 12px;
+}
+
+.bible-version {
+  flex: 1;
+  text-align: right;
+}
+
+.bible-version select {
+  width: auto;
+  min-width: 90px;
+  max-width: 140px;
+  padding: 5px 20px 5px 6px;
+  font-size: 12px;
+  border-radius: 6px;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpolygon points='0,0 12,0 6,12' fill='%23333'/%3E%3C/svg%3E") no-repeat right 6px center;
+  background-size: 10px;
+  appearance: none;
+}
+
+.version-info {
+  text-align: center;
+  font-size: 10px;
+  color: #888;
+  margin-top: 6px;
+}
+
+/* 반응형 */
+@media (max-width: 480px) {
+  .header, .footer { gap: 5px; }
+  .header select, .bible-version select { font-size: 11.5px; }
+  .footer button { font-size: 12px; padding: 5px 10px; }
+}
+
+/* 모달 공통 */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 16px;
+  max-width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+  border-radius: 10px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+  position: relative;
+}
+
+.close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 26px;
+  cursor: pointer;
+  color: #aaa;
+}
+
+.close:hover {
+  color: #333;
+}
+
+.chapter-nav, .chapter-nav-bottom {
+  display: flex;
+  justify-content: space-between;
+  margin: 8px 0;
+  gap: 6px;
+}
+
+.chapter-nav button, .chapter-nav-bottom button {
+  padding: 6px 12px;
+  font-size: 12px;
+  min-width: 70px;
+  flex: 1;
+}
+
+#modalTitle {
+  font-size: 16px;
+  margin: 0;
+  text-align: center;
+  flex: 1;
+  line-height: 1.3;
+}
+
+.modal-bible-version {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.modal-bible-version select {
+  width: auto;
+  min-width: 90px;
+  max-width: 140px;
+  padding: 5px 20px 5px 6px;
+  font-size: 12px;
+  border-radius: 6px;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpolygon points='0,0 12,0 6,12' fill='%23333'/%3E%3C/svg%3E") no-repeat right 6px center;
+  background-size: 10px;
+  appearance: none;
+}
+
+/* 검색 & 범위 선택 */
+.search-container {
+  display: flex;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.search-input {
+  flex: 1;
+  padding: 6px 8px;
+  font-size: 13px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.range-select {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 0;
+}
+
+.range-select select {
+  flex: 1;
+  padding: 6px;
+  font-size: 13px;
+}
+
+.range-select label {
+  min-width: 50px;
+  font-size: 14px;
+  font-weight: bold;
+}
   </style>
 </head>
 <body>
