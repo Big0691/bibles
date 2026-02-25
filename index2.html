@@ -245,10 +245,7 @@ mark {
   padding: 1px 3px;
   border-radius: 3px;
 }
-.search-result-item:hover {
-  background-color: #f0f8ff;
-  transition: background 0.15s;
-} 
+
   </style>
 </head>
 <body>
@@ -619,6 +616,59 @@ window.addEventListener('load', () => {
     bookSel.appendChild(opt);
   });
 
+  // ── 여기부터 추가 ──
+  // 검색 모달용 책 선택지 채우기
+  const startBookSel = document.getElementById("startBook");
+  const endBookSel = document.getElementById("endBook");
+
+  BookList.forEach(b => {
+    const opt1 = document.createElement("option");
+    opt1.value = b;
+    opt1.textContent = b;
+    startBookSel.appendChild(opt1);
+
+    const opt2 = document.createElement("option");
+    opt2.value = b;
+    opt2.textContent = b;
+    endBookSel.appendChild(opt2);
+  });
+
+  // 장 옵션 동적 업데이트 함수
+  function updateChapterOptions(selId, book) {
+    const sel = document.getElementById(selId);
+    sel.innerHTML = '<option value="">장</option>';
+    if (!book) return;
+    const max = BookChapterCount[book] || 150;
+    for (let i = 1; i <= max; i++) {
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = i;
+      sel.appendChild(opt);
+    }
+  }
+
+  // 책 변경 시 장 옵션 업데이트
+  document.getElementById("startBook").addEventListener("change", e => {
+    updateChapterOptions("startChapter", e.target.value);
+  });
+
+  document.getElementById("endBook").addEventListener("change", e => {
+    updateChapterOptions("endChapter", e.target.value);
+  });
+
+  // 초기값으로 첫 번째 책의 장 채우기 (선택사항)
+  if (startBookSel.value) updateChapterOptions("startChapter", startBookSel.value);
+  if (endBookSel.value) updateChapterOptions("endChapter", endBookSel.value);
+  // ── 여기까지 추가 ──
+
+  // 나머지 기존 초기화 코드들...
+  loadSettings();
+  loadState();
+  loadBibleData(document.getElementById("bibleVersion").value);
+  // ...
+});
+
+  
   // 초기 설정 로드
   loadSettings();
   loadState();
