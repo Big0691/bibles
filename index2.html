@@ -241,7 +241,6 @@
 
 <div class="container">
   <div class="title-bar">
-    <button id="headerSearchBtn" class="search-button">검색</button>
     <div class="title-text">매일 성경읽기 달력</div>
     <button id="readButton">읽기</button>
   </div>
@@ -298,11 +297,13 @@
       </select>
     </div>
 
+    <!-- 책 선택 -->
     <div class="range-select">
       <label>책</label>
       <select id="modalBook"></select>
     </div>
 
+    <!-- 장 선택 -->
     <div class="range-select">
       <label>장</label>
       <select id="modalChapter"></select>
@@ -314,57 +315,12 @@
       <button id="nextChapterTop" onclick="changeChapter(1)">다음 ▶</button>
     </div>
 
-    <div style="text-align: center; margin: 16px 0;">
-      <button id="openSearchFromModal" class="search-button">검색 열기</button>
-    </div>
-
     <pre id="modalContent" style="white-space: pre-wrap; line-height: 1.6;"></pre>
 
     <div class="chapter-nav-bottom">
       <button id="prevChapterBottom" onclick="changeChapter(-1)">◀ 이전</button>
       <button id="nextChapterBottom" onclick="changeChapter(1)">다음 ▶</button>
     </div>
-  </div>
-</div>
-
-<div class="modal" id="searchModal">
-  <div class="modal-content">
-    <span class="close" onclick="document.getElementById('searchModal').style.display='none'">×</span>
-    
-    <h3 id="searchModalTitle">성경 검색</h3>
-
-    <div class="modal-bible-version" style="margin-bottom: 16px; text-align: center;">
-      <select id="searchBibleVersion">
-        <option value="kornkrvs.json" data-name="개역개정판" selected>개역개정판</option>
-        <!-- 나머지 옵션 동일 -->
-        <option value="korhrvs.json" data-name="개역한글">개역한글</option>
-        <option value="korhkjvs.json" data-name="흠정역">흠정역</option>
-        <option value="kornrsvs.json" data-name="새번역">새번역</option>
-        <option value="koreasys.json" data-name="쉬운성경">쉬운성경</option>
-        <option value="kordobs.json" data-name="우리말성경">우리말성경</option>
-        <option value="kortkvs.json" data-name="현대어">현대어</option>
-        <option value="korklbs.json" data-name="현대인">현대인</option>
-      </select>
-    </div>
-
-    <div class="range-select">
-      <label>시작</label>
-      <select id="startBook" style="flex: 1;"></select>
-      <select id="startChapter" style="width: 80px;"><option value="">장</option></select>
-    </div>
-
-    <div class="range-select">
-      <label>끝</label>
-      <select id="endBook" style="flex: 1;"></select>
-      <select id="endChapter" style="width: 80px;"><option value="">장</option></select>
-    </div>
-
-    <div class="search-container">
-      <input id="searchKeyword" class="search-input" placeholder="키워드 (선택)" />
-      <button id="executeSearchBtn" class="search-button">검색</button>
-    </div>
-
-    <pre id="searchModalContent" style="white-space: pre-wrap; line-height: 1.6;"></pre>
   </div>
 </div>
 
@@ -408,7 +364,6 @@ function loadSettings() {
     }
     document.getElementById("bibleVersion").value = state.bibleVersion || "kornkrvs.json";
     document.getElementById("modalBibleVersion").value = state.bibleVersion || "kornkrvs.json";
-    document.getElementById("searchBibleVersion").value = state.bibleVersion || "kornkrvs.json";
   }
   updateChapters();
 }
@@ -479,7 +434,7 @@ function updateModalChapterOptions() {
     opt.textContent = i + "장";
     chSel.appendChild(opt);
   }
-  chSel.value = currentChapter || "1";
+  chSel.value = currentChapter.toString() || "1";
 }
 
 function getVerses(bookName, chapterNum) {
@@ -527,6 +482,11 @@ function changeChapter(delta) {
   document.querySelectorAll("#prevChapterTop, #prevChapterBottom").forEach(b => b.disabled = prev);
   document.querySelectorAll("#nextChapterTop, #nextChapterBottom").forEach(b => b.disabled = next);
 
+  const modalChapterSelect = document.getElementById("modalChapter");
+  if (modalChapterSelect) {
+    modalChapterSelect.value = currentChapter.toString();
+  }
+
   updateModalContent();
 }
 
@@ -558,6 +518,11 @@ function handleMemoClick(idx) {
 
   currentBook = document.getElementById("book").value;
   currentChapter = ch;
+
+  document.getElementById("modalBook").value = currentBook;
+  updateModalChapterOptions();
+  document.getElementById("modalChapter").value = currentChapter.toString();
+
   changeChapter(0);
   document.getElementById("modal").style.display = "flex";
 }
@@ -606,7 +571,6 @@ window.addEventListener('load', () => {
   document.getElementById("bibleVersion").addEventListener("change", e => {
     const file = e.target.value;
     document.getElementById("modalBibleVersion").value = file;
-    document.getElementById("searchBibleVersion").value = file;
     loadBibleData(file);
     saveSettings();
   });
@@ -614,7 +578,6 @@ window.addEventListener('load', () => {
   document.getElementById("modalBibleVersion").addEventListener("change", e => {
     const file = e.target.value;
     document.getElementById("bibleVersion").value = file;
-    document.getElementById("searchBibleVersion").value = file;
     loadBibleData(file).then(updateModalContent);
     saveSettings();
   });
@@ -635,19 +598,13 @@ window.addEventListener('load', () => {
   document.getElementById("readButton").onclick = () => {
     currentBook = document.getElementById("book").value;
     currentChapter = parseInt(document.getElementById("chapter").value) || 1;
+
+    document.getElementById("modalBook").value = currentBook;
+    updateModalChapterOptions();
+    document.getElementById("modalChapter").value = currentChapter.toString();
+
     changeChapter(0);
     document.getElementById("modal").style.display = "flex";
-  };
-
-  // 검색 모달 열기 (헤더)
-  document.getElementById("headerSearchBtn").onclick = () => {
-    document.getElementById("searchModal").style.display = "flex";
-  };
-
-  // 모달 → 검색 모달 열기
-  document.getElementById("openSearchFromModal").onclick = () => {
-    document.getElementById("modal").style.display = "none";
-    document.getElementById("searchModal").style.display = "flex";
   };
 
   // 초기화 버튼
@@ -656,15 +613,6 @@ window.addEventListener('load', () => {
     memoControls.forEach(m => m.textContent = "");
     saveState();
     alert("달력이 초기화되었습니다.");
-  };
-
-  // ── 검색 실행 버튼 (아직 미완성) ──────────────────────────────────────
-  document.getElementById("executeSearchBtn").onclick = () => {
-    const keyword = document.getElementById("searchKeyword").value.trim();
-    const version = document.getElementById("searchBibleVersion").value;
-    // TODO: 실제 검색 로직 구현 필요
-    document.getElementById("searchModalContent").textContent = 
-      `검색 기능 준비 중입니다.\n\n번역: ${version}\n키워드: "${keyword}"\n\n(아직 구현되지 않음)`;
   };
 });
 </script>
