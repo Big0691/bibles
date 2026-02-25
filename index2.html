@@ -292,8 +292,8 @@
       <button id="nextChapterTop" onclick="changeChapter(1)">다음 ▶</button>
     </div>
 
-    <div class="search-container">
-      <input id="searchInputModal" class="search-input" placeholder="단어 또는 구절 검색 (예: 사랑, 요한복음 3:16)" />
+    <!-- 검색 입력 부분 제거, 검색 버튼만 남김 -->
+    <div class="search-container" style="justify-content: center;">
       <button id="searchButtonModal" class="search-button">검색</button>
     </div>
 
@@ -306,15 +306,14 @@
   </div>
 </div>
 
-<!-- 헤더 검색 모달 (번역본 + 시작/끝 책·장 선택 추가) -->
 <div class="modal" id="searchModal">
   <div class="modal-content">
     <span class="close" onclick="document.getElementById('searchModal').style.display='none'">×</span>
     
-    <h3 id="searchModalTitle">성경 범위 검색</h3>
+    <h3 id="searchModalTitle">성경 검색</h3>
 
-    <!-- 1. 번역본 선택 (기존) -->
-    <div class="modal-bible-version" style="margin-bottom: 16px; text-align: center;">
+    <!-- 번역본 선택 드롭다운 추가 -->
+    <div class="modal-bible-version" style="margin-bottom: 12px;">
       <select id="searchBibleVersion">
         <option value="kornkrvs.json" data-name="개역개정판" selected>개역개정판</option>
         <option value="korhrvs.json" data-name="개역한글">개역한글</option>
@@ -326,42 +325,40 @@
         <option value="korklbs.json" data-name="현대인">현대인</option>
       </select>
     </div>
-	
-	
-<!-- 2. 시작 책·장 -->
+
+    <!-- 시작 책·장 -->
     <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px;">
-      <label style="font-size: 14px; min-width: 50px; font-weight: bold;">시작</label>
-      <select id="startBook" style="flex: 1; font-size: 13px; padding: 6px;">
+      <label style="font-size: 13px; min-width: 50px;">시작</label>
+      <select id="startBook" style="flex: 1;">
         <!-- JS에서 채움 -->
       </select>
-      <select id="startChapter" style="width: 80px; font-size: 13px; padding: 6px;">
+      <select id="startChapter" style="width: 80px;">
         <option value="">장</option>
       </select>
     </div>
 
-    <!-- 3. 끝 책·장 -->
-    <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 16px;">
-      <label style="font-size: 14px; min-width: 50px; font-weight: bold;">끝</label>
-      <select id="endBook" style="flex: 1; font-size: 13px; padding: 6px;">
+    <!-- 끝 책·장 -->
+    <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px;">
+      <label style="font-size: 13px; min-width: 50px;">끝</label>
+      <select id="endBook" style="flex: 1;">
         <!-- JS에서 채움 -->
       </select>
-      <select id="endChapter" style="width: 80px; font-size: 13px; padding: 6px;">
+      <select id="endChapter" style="width: 80px;">
         <option value="">장</option>
       </select>
     </div>
 
-    <!-- 4. 키워드 입력 + 검색 버튼 -->
     <div class="search-container">
-      <input id="searchInputHeader" class="search-input" placeholder="추가 키워드 (선택사항)" />
+      <input id="searchInputHeader" class="search-input" placeholder="키워드 (선택)" />
       <button id="searchButtonHeaderInner" class="search-button">검색</button>
     </div>
 
-    <pre id="searchModalContent" style="white-space: pre-wrap; font-family: inherit; line-height: 1.6; margin-top: 16px;"></pre>
+    <pre id="searchModalContent" style="white-space: pre-wrap; font-family: inherit; line-height: 1.6;"></pre>
   </div>
 </div>
 
 <script>
-// 데이터
+// 데이터 (기존 그대로)
 const BookList = ["창세기","출애굽기","레위기","민수기","신명기","여호수아","사사기","룻기","사무엘상","사무엘하","열왕기상","열왕기하","역대상","역대하","에스라","느헤미야","에스더","욥기","시편","잠언","전도서","아가","이사야","예레미야","예레미야애가","에스겔","다니엘","호세아","요엘","아모스","오바댜","요나","미가","나훔","하박국","스바냐","학개","스가랴","말라기","마태복음","마가복음","누가복음","요한복음","사도행전","로마서","고린도전서","고린도후서","갈라디아서","에베소서","빌립보서","골로새서","데살로니가전서","데살로니가후서","디모데전서","디모데후서","디도서","빌레몬서","히브리서","야고보서","베드로전서","베드로후서","요한일서","요한이서","요한삼서","유다서","요한계시록"];
 
 const BookMap = {"창세기":"창","출애굽기":"출","레위기":"레","민수기":"민","신명기":"신","여호수아":"수","사사기":"삿","룻기":"룻","사무엘상":"삼상","사무엘하":"삼하","열왕기상":"왕상","열왕기하":"왕하","역대상":"대상","역대하":"대하","에스라":"스","느헤미야":"느","에스더":"에","욥기":"욥","시편":"시","잠언":"잠","전도서":"전","아가":"아","이사야":"사","예레미야":"렘","예레미야애가":"애","에스겔":"겔","다니엘":"단","호세아":"호","요엘":"욜","아모스":"암","오바댜":"옵","요나":"욘","미가":"미","나훔":"나","하박국":"합","스바냐":"습","학개":"학","스가랴":"슥","말라기":"말","마태복음":"마","마가복음":"막","누가복음":"눅","요한복음":"요","사도행전":"행","로마서":"롬","고린도전서":"고전","고린도후서":"고후","갈라디아서":"갈","에베소서":"엡","빌립보서":"빌","골로새서":"골","데살로니가전서":"살전","데살로니가후서":"살후","디모데전서":"딤전","디모데후서":"딤후","디도서":"딛","빌레몬서":"몬","히브리서":"히","야고보서":"약","베드로전서":"벧전","베드로후서":"벧후","요한일서":"요일","요한이서":"요이","요한삼서":"요삼","유다서":"유","요한계시록":"계"};
@@ -440,11 +437,21 @@ function saveSettings() {
 
 function loadSettings() {
   const saved = localStorage.getItem("bibleCalendarSettings");
-  if (!saved) return;
+  if (!saved) {
+    // 초기 기본값 설정
+    bookSel.value = "창세기";
+    updateChapters();
+    document.getElementById("chapter").value = "1";
+    return;
+  }
   const state = JSON.parse(saved);
 
   if (state.month) document.getElementById("month").value = state.month;
-  if (state.book && BookList.includes(state.book)) bookSel.value = state.book;
+  if (state.book && BookList.includes(state.book)) {
+    bookSel.value = state.book;
+  } else {
+    bookSel.value = "창세기"; // 잘못된 값이면 기본으로
+  }
   updateChapters();
   if (state.chapter) {
     const chSel = document.getElementById("chapter");
@@ -598,144 +605,127 @@ function parseRef(refStr) {
   return book ? {book, chapter, verse} : null;
 }
 
-// 모달 내용 업데이트
-function updateModalContent() {
-  const versionName = document.getElementById("modalBibleVersion").selectedOptions[0].dataset.name || "성경";
-  const titleEl = document.getElementById("modalTitle");
-  titleEl.textContent = `${versionName} ${currentBook} ${currentChapter}장`;
+// 단일 구절 파싱 (요한복음 3:16, 창1:1 등)
+function parseSingleVerse(str) {
+  str = str.trim().replace(/\s+/g, ' ');
 
-  const contentEl = document.getElementById("modalContent");
-  contentEl.textContent = "로딩 중...";
+  const patterns = [
+    /^([가-힣]+)\s*(\d+):(\d+)$/,
+    /^([가-힣]{1,2})\s*(\d+):(\d+)$/,
+    /^([가-힣]+)(\d+):(\d+)$/,
+    /^([가-힣]+) (\d+):(\d+)$/
+  ];
 
-  const verses = getVerses(currentBook, currentChapter);
+  for (const pattern of patterns) {
+    const match = str.match(pattern);
+    if (match) {
+      let bookInput = match[1];
+      const chapter = parseInt(match[2]);
+      const verse = parseInt(match[3]);
 
-  if (verses.length === 0) {
-    contentEl.textContent = "해당 장의 내용이 없습니다.";
-    return;
+      const abbrToFull = Object.fromEntries(
+        Object.entries(BookMap).map(([full, abbr]) => [abbr, full])
+      );
+      let book = abbrToFull[bookInput] || bookInput;
+
+      if (!BookList.includes(book)) {
+        book = BookList.find(b => 
+          b.includes(bookInput) || b.startsWith(bookInput)
+        ) || book;
+      }
+
+      if (BookList.includes(book)) {
+        return { book, chapter, verse };
+      }
+    }
+  }
+  return null;
+}
+
+// 키워드 검색 (성경 전체 뒤지기)
+function searchKeywordInBible(keyword) {
+  if (!BibleData.books) return [];
+
+  const results = [];
+  const lowerKeyword = keyword.toLowerCase().trim();
+
+  for (const bookName in BibleData.books) {
+    const book = BibleData.books[bookName];
+    for (const chStr in book) {
+      const chapter = book[chStr];
+      for (const vStr in chapter) {
+        const text = chapter[vStr];
+        if (typeof text === 'string' && text.toLowerCase().includes(lowerKeyword)) {
+          results.push({
+            book: bookName,
+            chapter: parseInt(chStr),
+            verse: parseInt(vStr),
+            text
+          });
+        }
+      }
+    }
   }
 
-  let text = "";
-  verses.forEach(v => {
-    text += `${v.verse}  ${v.text}\n\n`;
-  });
-
-  contentEl.textContent = text.trim();
-  contentEl.scrollTop = 0;
+  return results.slice(0, 100); // 최대 100건
 }
 
-// 장 이동
-function changeChapter(delta) {
-  const newCh = currentChapter + delta;
-  const maxCh = BookChapterCount[currentBook] || 150;
-
-  if (newCh < 1 || newCh > maxCh) return;
-
-  currentChapter = newCh;
-
-  const prevDisabled = (currentChapter <= 1);
-  const nextDisabled = (currentChapter >= maxCh);
-
-  document.getElementById("prevChapterTop").disabled = prevDisabled;
-  document.getElementById("nextChapterTop").disabled = nextDisabled;
-  document.getElementById("prevChapterBottom").disabled = prevDisabled;
-  document.getElementById("nextChapterBottom").disabled = nextDisabled;
-
-  updateModalContent();
-}
-
-// 메모 클릭 → 모달 열기
-function handleMemoClick(idx) {
-  const txt = memoControls[idx].textContent.trim();
-  if (!txt) return;
-
-  const chNum = parseInt(txt);
-  if (isNaN(chNum)) return;
-
-  currentBook = bookSel.value;
-  currentChapter = chNum;
-
-  const maxCh = BookChapterCount[currentBook] || 150;
-  const prevDisabled = (currentChapter <= 1);
-  const nextDisabled = (currentChapter >= maxCh);
-
-  document.getElementById("prevChapterTop").disabled = prevDisabled;
-  document.getElementById("nextChapterTop").disabled = nextDisabled;
-  document.getElementById("prevChapterBottom").disabled = prevDisabled;
-  document.getElementById("nextChapterBottom").disabled = nextDisabled;
-
-  updateModalContent();
-  document.getElementById("modal").style.display = "flex";
-}
-
-// 새로 추가: 읽기 버튼 클릭 → 자유 모드 모달 열기 (선택된 책/장/버전으로)
-document.getElementById("readButton").onclick = () => {
-  currentBook = bookSel.value;
-  currentChapter = parseInt(document.getElementById("chapter").value) || 1;
-
-  const maxCh = BookChapterCount[currentBook] || 150;
-  const prevDisabled = (currentChapter <= 1);
-  const nextDisabled = (currentChapter >= maxCh);
-
-  document.getElementById("prevChapterTop").disabled = prevDisabled;
-  document.getElementById("nextChapterTop").disabled = nextDisabled;
-  document.getElementById("prevChapterBottom").disabled = prevDisabled;
-  document.getElementById("nextChapterBottom").disabled = nextDisabled;
-
-  updateModalContent();
-  document.getElementById("modal").style.display = "flex";
-};
-
-// 새로 추가: 검색 기능 (공통)
+// 통합 검색 실행 함수
 function performSearch(inputEl, contentEl, titleEl) {
   const query = inputEl.value.trim();
-  if (!query) return;
-
-  const verses = getVersesRange(query);
-  if (verses.length === 0) {
-    contentEl.textContent = "검색 결과가 없습니다. 형식: 창1:1-창1:5";
+  if (!query) {
+    contentEl.textContent = "검색어를 입력해주세요.\n\n예시:\n사랑\n하나님\n요한복음 3:16\n창1:1-창1:5\n태초에 하나님이";
     return;
   }
 
-  const ref = parseRef(query.split('-')[0]);
-  titleEl.textContent = `${document.getElementById("modalBibleVersion").selectedOptions[0].dataset.name || "성경"} ${ref.book} ${ref.chapter}장 (${ref.verse}~${verses[verses.length-1].verse})`;
+  // 1. 범위 검색
+  if (query.includes('-')) {
+    const verses = getVersesRange(query);
+    if (verses.length > 0) {
+      const start = parseRef(query.split('-')[0].trim());
+      if (start) {
+        titleEl.textContent = `${start.book} 범위 (${verses[0].verse}~${verses[verses.length-1].verse}절)`;
+        let text = "";
+        verses.forEach(v => text += `${v.verse}  ${v.text}\n\n`);
+        contentEl.textContent = text.trim() || "내용 없음";
+        contentEl.scrollTop = 0;
+        return;
+      }
+    }
+  }
+
+  // 2. 단일 구절 지정
+  const single = parseSingleVerse(query);
+  if (single) {
+    const verses = getVerses(single.book, single.chapter);
+    const target = verses.find(v => v.verse === single.verse);
+    if (target) {
+      titleEl.textContent = `${single.book} ${single.chapter}장 ${single.verse}절`;
+      contentEl.textContent = `${single.verse}  ${target.text}`;
+      contentEl.scrollTop = 0;
+      return;
+    }
+  }
+
+  // 3. 키워드 검색 (기본)
+  const results = searchKeywordInBible(query);
+
+  if (results.length === 0) {
+    contentEl.textContent = `"${query}" 에 대한 검색 결과가 없습니다.\n\n다른 단어로 다시 시도해 보세요.`;
+    titleEl.textContent = "검색 결과 (0건)";
+    return;
+  }
+
+  titleEl.textContent = `"${query}" 검색 결과 (${results.length}건)`;
 
   let text = "";
-  verses.forEach(v => {
-    text += `${v.verse}  ${v.text}\n\n`;
+  results.forEach(r => {
+    text += `${r.book} ${r.chapter}:${r.verse}   ${r.text}\n\n`;
   });
 
   contentEl.textContent = text.trim();
   contentEl.scrollTop = 0;
 }
-
-// 헤더 검색 버튼 → 검색 모달 열기
-document.getElementById("searchButtonHeader").onclick = () => {
-  document.getElementById("searchModal").style.display = "flex";
-  document.getElementById("searchInputHeader").focus();
-};
-
-// 헤더 검색 모달 내 검색 버튼
-document.getElementById("searchButtonHeaderInner").onclick = () => {
-  performSearch(
-    document.getElementById("searchInputHeader"),
-    document.getElementById("searchModalContent"),
-    document.getElementById("searchModalTitle")
-  );
-};
-
-// 모달 내 검색 버튼
-document.getElementById("searchButtonModal").onclick = () => {
-  performSearch(
-    document.getElementById("searchInputModal"),
-    document.getElementById("modalContent"),
-    document.getElementById("modalTitle")
-  );
-};
-
-// 초기 로드
-loadSettings();
-loadState();
-loadBibleData(document.getElementById("bibleVersion").value);
 
 // 검색 모달 내 번역본 변경 시 데이터 다시 로드
 document.getElementById("searchBibleVersion").addEventListener("change", (e) => {
@@ -745,106 +735,21 @@ document.getElementById("searchBibleVersion").addEventListener("change", (e) => 
   });
 });
 
-// 검색 모달 열릴 때 초기화
-document.getElementById("searchButtonHeader").onclick = () => {
+// 읽기 모달 내 검색 버튼 클릭 시 검색 모달 열기
+document.getElementById("searchButtonModal").onclick = () => {
+  document.getElementById("modal").style.display = "none"; // 읽기 모달 닫기
   document.getElementById("searchModal").style.display = "flex";
-
-  const startBookSel = document.getElementById("startBook");
-  const endBookSel   = document.getElementById("endBook");
-
-  // 책 목록 한 번만 채우기
-  if (startBookSel.options.length <= 1) {  // <option value=""> 없으면
-    BookList.forEach(book => {
-      const opt = document.createElement("option");
-      opt.value = book;
-      opt.textContent = book;
-      startBookSel.appendChild(opt.cloneNode(true));
-      endBookSel.appendChild(opt);
-    });
-  }
-
-  // 기본값 설정
-  startBookSel.value = "창세기";
-  endBookSel.value   = "요한계시록";
-
-  updateChapterOptions("startChapter", startBookSel.value);
-  updateChapterOptions("endChapter",   endBookSel.value);
-
-  document.getElementById("searchInputHeader").focus();
 };
 
-// 책 변경 → 장 드롭다운 업데이트
-function updateChapterOptions(selectId, bookName) {
-  const sel = document.getElementById(selectId);
-  sel.innerHTML = '<option value="">장</option>';
-
-  if (!bookName) return;
-
-  const max = BookChapterCount[bookName] || 150;
-  for (let i = 1; i <= max; i++) {
-    const opt = document.createElement("option");
-    opt.value = i;
-    opt.textContent = i + "장";
-    sel.appendChild(opt);
-  }
-
-  // 기본 장 번호 (예: 1장)
-  sel.value = "1";
-}
-
-document.getElementById("startBook").addEventListener("change", e => {
-  updateChapterOptions("startChapter", e.target.value);
-});
-
-document.getElementById("endBook").addEventListener("change", e => {
-  updateChapterOptions("endChapter", e.target.value);
-});
-
-// 검색 실행 시 범위 우선 적용 (performSearch 함수 수정 예시)
-function performSearch(inputEl, contentEl, titleEl) {
-  const query = inputEl.value.trim(); // 키워드 (선택)
-
-  // 범위 선택 값 읽기
-  const startBook = document.getElementById("startBook").value;
-  const startCh   = parseInt(document.getElementById("startChapter").value) || 1;
-  const endBook   = document.getElementById("endBook").value;
-  const endCh     = parseInt(document.getElementById("endChapter").value) || 1;
-
-  if (!startBook || !endBook) {
-    contentEl.textContent = "시작 책과 끝 책을 선택해주세요.";
-    return;
-  }
-
-  if (startBook !== endBook) {
-    contentEl.textContent = "현재는 같은 책 범위만 지원합니다.\n시작 책과 끝 책을 동일하게 선택해 주세요.";
-    return;
-  }
-
-  let verses = [];
-  for (let ch = startCh; ch <= endCh; ch++) {
-    verses = verses.concat(getVerses(startBook, ch));
-  }
-
-  if (verses.length === 0) {
-    contentEl.textContent = "해당 범위에 내용이 없습니다.";
-    return;
-  }
-
-  // 키워드 필터링 (입력 있으면)
-  if (query) {
-    const lowerQuery = query.toLowerCase();
-    verses = verses.filter(v => v.text.toLowerCase().includes(lowerQuery));
-  }
-
-  titleEl.textContent = `${startBook} ${startCh}장 ~ ${endCh}장` + (query ? ` (${query} 포함)` : "");
-
-  let text = "";
-  verses.forEach(v => {
-    text += `${v.verse}  ${v.text}\n\n`;
-  });
-
-  contentEl.textContent = text.trim() || "결과 없음";
-  contentEl.scrollTop = 0;
+// 초기 로드 시 장 드롭다운 강제 초기화
+loadSettings();
+loadState();
+loadBibleData(document.getElementById("bibleVersion").value);
+if (bookSel.value) {
+  updateChapters();
+} else {
+  bookSel.value = "창세기";
+  updateChapters();
 }
 </script>
 </body>
