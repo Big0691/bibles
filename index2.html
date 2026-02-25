@@ -306,15 +306,15 @@
   </div>
 </div>
 
-<!-- 헤더 검색 모달 (번역본 드롭다운 추가) -->
+<!-- 헤더 검색 모달 (번역본 + 시작/끝 책·장 선택 추가) -->
 <div class="modal" id="searchModal">
   <div class="modal-content">
     <span class="close" onclick="document.getElementById('searchModal').style.display='none'">×</span>
     
-    <h3 id="searchModalTitle">성경 검색</h3>
+    <h3 id="searchModalTitle">성경 범위 검색</h3>
 
-    <!-- 번역본 선택 드롭다운 추가 -->
-    <div class="modal-bible-version" style="margin-bottom: 12px;">
+    <!-- 1. 번역본 선택 (기존) -->
+    <div class="modal-bible-version" style="margin-bottom: 16px; text-align: center;">
       <select id="searchBibleVersion">
         <option value="kornkrvs.json" data-name="개역개정판" selected>개역개정판</option>
         <option value="korhrvs.json" data-name="개역한글">개역한글</option>
@@ -326,13 +326,37 @@
         <option value="korklbs.json" data-name="현대인">현대인</option>
       </select>
     </div>
+	
+	
+<!-- 2. 시작 책·장 -->
+    <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px;">
+      <label style="font-size: 14px; min-width: 50px; font-weight: bold;">시작</label>
+      <select id="startBook" style="flex: 1; font-size: 13px; padding: 6px;">
+        <!-- JS에서 채움 -->
+      </select>
+      <select id="startChapter" style="width: 80px; font-size: 13px; padding: 6px;">
+        <option value="">장</option>
+      </select>
+    </div>
 
+    <!-- 3. 끝 책·장 -->
+    <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 16px;">
+      <label style="font-size: 14px; min-width: 50px; font-weight: bold;">끝</label>
+      <select id="endBook" style="flex: 1; font-size: 13px; padding: 6px;">
+        <!-- JS에서 채움 -->
+      </select>
+      <select id="endChapter" style="width: 80px; font-size: 13px; padding: 6px;">
+        <option value="">장</option>
+      </select>
+    </div>
+
+    <!-- 4. 키워드 입력 + 검색 버튼 -->
     <div class="search-container">
-      <input id="searchInputHeader" class="search-input" placeholder="단어 또는 구절 검색 (예: 사랑, 요한복음 3:16)" />
+      <input id="searchInputHeader" class="search-input" placeholder="추가 키워드 (선택사항)" />
       <button id="searchButtonHeaderInner" class="search-button">검색</button>
     </div>
 
-    <pre id="searchModalContent" style="white-space: pre-wrap; font-family: inherit; line-height: 1.6;"></pre>
+    <pre id="searchModalContent" style="white-space: pre-wrap; font-family: inherit; line-height: 1.6; margin-top: 16px;"></pre>
   </div>
 </div>
 
@@ -720,6 +744,108 @@ document.getElementById("searchBibleVersion").addEventListener("change", (e) => 
     document.getElementById("searchInputHeader").focus();
   });
 });
+
+// 검색 모달 열릴 때 초기화
+document.getElementById("searchButtonHeader").onclick = () => {
+  document.getElementById("searchModal").style.display = "flex";
+
+  const startBookSel = document.getElementById("startBook");
+  const endBookSel   = document.getElementById("endBook");
+
+  // 책 목록 한 번만 채우기
+  if (startBookSel.options.length <= 1) {  // <option value=""> 없으면
+    BookList.forEach(book => {
+      const opt = document.createElement("option");
+      opt.value = book;
+      opt.textContent = book;
+      startBookSel.appendChild(opt.cloneNode(true));
+      endBookSel.appendChild(opt);
+    });
+  }
+
+  // 기본값 설정
+  startBookSel.value = "창세기";
+  endBookSel.value   = "요한계시록";
+
+  updateChapterOptions("startChapter", startBookSel.value);
+  updateChapterOptions("endChapter",   endBookSel.value);
+
+  document.getElementById("searchInputHeader").focus();
+};
+
+// 책 변경 → 장 드롭다운 업데이트
+function updateChapterOptions(selectId, bookName) {
+  const sel = document.getElementById(selectId);
+  sel.innerHTML = '<option value="">장</option>';
+
+  if (!bookName) return;
+
+  const max = BookChapterCount[bookName] || 150;
+  for (let i = 1; i <= max; i++) {
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = i + "장";
+    sel.appendChild(opt);
+  }
+
+  // 기본 장 번호 (예: 1장)
+  sel.value = "1";
+}
+
+document.getElementById("startBook").addEventListener("change", e => {
+  updateChapterOptions("startChapter", e.target.value);
+});
+
+document.getElementById("endBook").addEventListener("change", e => {
+  updateChapterOptions("endChapter", e.target.value);
+});
+
+// 검색 실행 시 범위 우선 적용 (performSearch 함수 수정 예시)
+function performSearch(inputEl, contentEl, titleEl) {
+  const query = inputEl.value.trim(); // 키워드 (선택)
+
+  // 범위 선택 값 읽기
+  const startBook = document.getElementById("startBook").value;
+  const startCh   = parseInt(document.getElementById("startChapter").value) || 1;
+  const endBook   = document.getElementById("endBook").value;
+  const endCh     = parseInt(document.getElementById("endChapter").value) || 1;
+
+  if (!startBook || !endBook) {
+    contentEl.textContent = "시작 책과 끝 책을 선택해주세요.";
+    return;
+  }
+
+  if (startBook !== endBook) {
+    contentEl.textContent = "현재는 같은 책 범위만 지원합니다.\n시작 책과 끝 책을 동일하게 선택해 주세요.";
+    return;
+  }
+
+  let verses = [];
+  for (let ch = startCh; ch <= endCh; ch++) {
+    verses = verses.concat(getVerses(startBook, ch));
+  }
+
+  if (verses.length === 0) {
+    contentEl.textContent = "해당 범위에 내용이 없습니다.";
+    return;
+  }
+
+  // 키워드 필터링 (입력 있으면)
+  if (query) {
+    const lowerQuery = query.toLowerCase();
+    verses = verses.filter(v => v.text.toLowerCase().includes(lowerQuery));
+  }
+
+  titleEl.textContent = `${startBook} ${startCh}장 ~ ${endCh}장` + (query ? ` (${query} 포함)` : "");
+
+  let text = "";
+  verses.forEach(v => {
+    text += `${v.verse}  ${v.text}\n\n`;
+  });
+
+  contentEl.textContent = text.trim() || "결과 없음";
+  contentEl.scrollTop = 0;
+}
 </script>
 </body>
 </html>
