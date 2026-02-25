@@ -235,6 +235,10 @@
       font-size: 14px;
       font-weight: bold;
     }
+.search-result-item:hover {
+  background-color: #f0f8ff;
+  transition: background 0.15s;
+}
 mark {
   background-color: #fffacd;
   color: #000;
@@ -343,10 +347,10 @@ mark {
     
     <h3 id="searchModalTitle">성경 검색</h3>
 
+    <!-- 번역본 선택 완성 -->
     <div class="modal-bible-version" style="margin-bottom: 16px; text-align: center;">
       <select id="searchBibleVersion">
         <option value="kornkrvs.json" data-name="개역개정판" selected>개역개정판</option>
-        <!-- 나머지 옵션 동일 -->
         <option value="korhrvs.json" data-name="개역한글">개역한글</option>
         <option value="korhkjvs.json" data-name="흠정역">흠정역</option>
         <option value="kornrsvs.json" data-name="새번역">새번역</option>
@@ -374,7 +378,8 @@ mark {
       <button id="executeSearchBtn" class="search-button">검색</button>
     </div>
 
-    <pre id="searchModalContent" style="white-space: pre-wrap; line-height: 1.6;"></pre>
+    <!-- 여기만 변경! <pre> → <div> -->
+    <div id="searchModalContent" style="white-space: pre-wrap; line-height: 1.6; padding: 10px; min-height: 200px;"></div>
   </div>
 </div>
 
@@ -694,28 +699,30 @@ document.getElementById("executeSearchBtn").onclick = () => {
   const contentEl = document.getElementById("searchModalContent");
 
   if (!keyword) {
-    contentEl.innerHTML = '<div style="color:#777; padding:10px;">검색어를 입력해주세요.</div>';
+    contentEl.innerHTML = '<div style="color:#777; padding:20px; text-align:center;">검색어를 입력해주세요.</div>';
     return;
   }
 
-  // 현재 로드된 성경 데이터와 버전이 다르면 재로드
+  contentEl.innerHTML = '<div style="color:#888; padding:30px; text-align:center;">검색 중...</div>';
+
+  // 다른 번역본이면 데이터 다시 불러오기
   if (document.getElementById("bibleVersion").value !== version) {
-    loadBibleData(version).then(() => {
-      performSearch(keyword, version, contentEl);
-    }).catch(err => {
-      contentEl.innerHTML = `<div style="color:red;">성경 데이터 로드 실패: ${err.message}</div>`;
-    });
+    loadBibleData(version)
+      .then(() => performSearch(keyword, version, contentEl))
+      .catch(err => {
+        contentEl.innerHTML = `<div style="color:red; padding:20px;">오류: ${err.message}</div>`;
+      });
   } else {
     performSearch(keyword, version, contentEl);
   }
 };
 
-// 실제 검색 수행 함수 (분리해서 가독성 좋게)
+// 실제 검색 로직
 function performSearch(keyword, version, contentEl) {
   const lowerKeyword = keyword.toLowerCase();
   const results = [];
   let matchCount = 0;
-  const maxResults = 200; // 너무 많으면 제한
+  const maxResults = 200;
 
   for (const book in BibleData.books) {
     const chapters = BibleData.books[book];
@@ -723,22 +730,23 @@ function performSearch(keyword, version, contentEl) {
       const verses = chapters[ch];
       for (const v in verses) {
         const text = verses[v];
-        if (typeof text === 'string' && text.toLowerCase().includes(lowerKeyword)) {
+        if (typeof text !== 'string') continue;
+        if (text.toLowerCase().includes(lowerKeyword)) {
           const verseNum = parseInt(v, 10);
           const highlighted = text.replace(
             new RegExp(keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'),
-            match => `<mark>${match}</mark>`
+            m => `<mark>${m}</mark>`
           );
 
-          results.push(
-            `<div class="search-result-item" 
-                  style="cursor:pointer; padding:8px 10px; border-bottom:1px solid #eee;"
-                  data-book="${book}" 
-                  data-chapter="${ch}">
-               <strong>${book} ${ch}장 ${verseNum}절</strong><br>
-               ${highlighted}
-             </div>`
-          );
+          results.push(`
+            <div class="search-result-item" 
+                 style="cursor:pointer; padding:10px; border-bottom:1px solid #eee;"
+                 data-book="${book}" 
+                 data-chapter="${ch}">
+              <strong>${book} ${ch}장 ${verseNum}절</strong><br>
+              ${highlighted}
+            </div>
+          `);
 
           matchCount++;
           if (matchCount >= maxResults) break;
@@ -750,44 +758,41 @@ function performSearch(keyword, version, contentEl) {
   }
 
   if (results.length === 0) {
-    contentEl.innerHTML = `<div style="color:#555; padding:15px;">
-      "${keyword}" 에 대한 검색 결과가 없습니다.<br>
-      (번역: ${version})
-    </div>`;
+    contentEl.innerHTML = `
+      <div style="color:#555; padding:20px; text-align:center;">
+        "${keyword}" 에 대한 검색 결과가 없습니다.<br>
+        <small>(번역: ${version})</small>
+      </div>`;
   } else {
     contentEl.innerHTML = `
-      <div style="font-weight:bold; margin:10px 0; color:#2c3e50;">
-        검색 결과: ${matchCount}개${matchCount >= maxResults ? ' (상위 200개만 표시)' : ''}
+      <div style="font-weight:bold; margin:12px 0; color:#2c3e50; padding-left:10px;">
+        검색 결과: ${matchCount}개 ${matchCount >= maxResults ? '(상위 200개만 표시)' : ''}
       </div>
       ${results.join('')}
     `;
   }
 
   contentEl.scrollTop = 0;
-
-  // 결과 항목 클릭 이벤트 연결
   attachSearchClickListeners();
 }
 
-// 클릭 시 해당 장으로 이동
+// 결과 클릭 시 해당 장으로 이동
 function attachSearchClickListeners() {
   document.querySelectorAll('.search-result-item').forEach(item => {
     item.addEventListener('click', () => {
       const book = item.dataset.book;
-      const chapter = parseInt(item.dataset.chapter);
+      const chapter = parseInt(item.dataset.chapter, 10);
 
       currentBook = book;
       currentChapter = chapter;
 
-      // 메인 화면 드롭다운 동기화 (선택)
       document.getElementById("book").value = book;
       updateChapters();
-      document.getElementById("chapter").value = chapter;
+      document.getElementById("chapter").value = chapter.toString();
 
-      // 모달 드롭다운 동기화
       document.getElementById("modalBook").value = book;
       updateModalChapterOptions();
-      document.getElementById("modalChapter").value = chapter;
+      document.getElementById("modalChapter").value = chapter.toString();
 
       changeChapter(0);
       document.getElementById("searchModal").style.display = 'none';
