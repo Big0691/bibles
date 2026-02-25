@@ -235,6 +235,16 @@
       font-size: 14px;
       font-weight: bold;
     }
+mark {
+  background-color: #fffacd;
+  color: #000;
+  padding: 1px 3px;
+  border-radius: 3px;
+}
+.search-result-item:hover {
+  background-color: #f0f8ff;
+  transition: background 0.15s;
+} 
   </style>
 </head>
 <body>
@@ -677,14 +687,114 @@ window.addEventListener('load', () => {
     alert("달력이 초기화되었습니다.");
   };
 
-  // 검색 실행 버튼 (아직 미완성)
-  document.getElementById("executeSearchBtn").onclick = () => {
-    const keyword = document.getElementById("searchKeyword").value.trim();
-    const version = document.getElementById("searchBibleVersion").value;
-    document.getElementById("searchModalContent").textContent = 
-      `검색 기능 준비 중입니다.\n\n번역: ${version}\n키워드: "${keyword}"\n\n(아직 구현되지 않음)`;
-  };
-});
+// 검색 실행 버튼
+document.getElementById("executeSearchBtn").onclick = () => {
+  const keyword = document.getElementById("searchKeyword").value.trim();
+  const version = document.getElementById("searchBibleVersion").value;
+  const contentEl = document.getElementById("searchModalContent");
+
+  if (!keyword) {
+    contentEl.innerHTML = '<div style="color:#777; padding:10px;">검색어를 입력해주세요.</div>';
+    return;
+  }
+
+  // 현재 로드된 성경 데이터와 버전이 다르면 재로드
+  if (document.getElementById("bibleVersion").value !== version) {
+    loadBibleData(version).then(() => {
+      performSearch(keyword, version, contentEl);
+    }).catch(err => {
+      contentEl.innerHTML = `<div style="color:red;">성경 데이터 로드 실패: ${err.message}</div>`;
+    });
+  } else {
+    performSearch(keyword, version, contentEl);
+  }
+};
+
+// 실제 검색 수행 함수 (분리해서 가독성 좋게)
+function performSearch(keyword, version, contentEl) {
+  const lowerKeyword = keyword.toLowerCase();
+  const results = [];
+  let matchCount = 0;
+  const maxResults = 200; // 너무 많으면 제한
+
+  for (const book in BibleData.books) {
+    const chapters = BibleData.books[book];
+    for (const ch in chapters) {
+      const verses = chapters[ch];
+      for (const v in verses) {
+        const text = verses[v];
+        if (typeof text === 'string' && text.toLowerCase().includes(lowerKeyword)) {
+          const verseNum = parseInt(v, 10);
+          const highlighted = text.replace(
+            new RegExp(keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'),
+            match => `<mark>${match}</mark>`
+          );
+
+          results.push(
+            `<div class="search-result-item" 
+                  style="cursor:pointer; padding:8px 10px; border-bottom:1px solid #eee;"
+                  data-book="${book}" 
+                  data-chapter="${ch}">
+               <strong>${book} ${ch}장 ${verseNum}절</strong><br>
+               ${highlighted}
+             </div>`
+          );
+
+          matchCount++;
+          if (matchCount >= maxResults) break;
+        }
+      }
+      if (matchCount >= maxResults) break;
+    }
+    if (matchCount >= maxResults) break;
+  }
+
+  if (results.length === 0) {
+    contentEl.innerHTML = `<div style="color:#555; padding:15px;">
+      "${keyword}" 에 대한 검색 결과가 없습니다.<br>
+      (번역: ${version})
+    </div>`;
+  } else {
+    contentEl.innerHTML = `
+      <div style="font-weight:bold; margin:10px 0; color:#2c3e50;">
+        검색 결과: ${matchCount}개${matchCount >= maxResults ? ' (상위 200개만 표시)' : ''}
+      </div>
+      ${results.join('')}
+    `;
+  }
+
+  contentEl.scrollTop = 0;
+
+  // 결과 항목 클릭 이벤트 연결
+  attachSearchClickListeners();
+}
+
+// 클릭 시 해당 장으로 이동
+function attachSearchClickListeners() {
+  document.querySelectorAll('.search-result-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const book = item.dataset.book;
+      const chapter = parseInt(item.dataset.chapter);
+
+      currentBook = book;
+      currentChapter = chapter;
+
+      // 메인 화면 드롭다운 동기화 (선택)
+      document.getElementById("book").value = book;
+      updateChapters();
+      document.getElementById("chapter").value = chapter;
+
+      // 모달 드롭다운 동기화
+      document.getElementById("modalBook").value = book;
+      updateModalChapterOptions();
+      document.getElementById("modalChapter").value = chapter;
+
+      changeChapter(0);
+      document.getElementById("searchModal").style.display = 'none';
+      document.getElementById("modal").style.display = 'flex';
+    });
+  });
+}
 </script>
 </body>
 </html>
