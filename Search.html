@@ -16,22 +16,32 @@
       max-width: 720px;
       margin: 0 auto;
     }
-    h1 {
-      font-size: 1.5rem;
-      margin: 0 0 1rem;
+    .version-row {
+      margin-bottom: 1.2rem;
+      font-weight: 500;
     }
     .search-row {
       display: flex;
+      align-items: center;
       flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 1rem;
+      gap: 10px;
+      margin-bottom: 1.5rem;
     }
     select, input {
       padding: 8px 12px;
       font-size: 0.95rem;
       border: 1px solid #ccc;
       border-radius: 6px;
-      min-width: 100px;
+    }
+    .range-label {
+      font-weight: 600;
+      color: #444;
+      white-space: nowrap;
+    }
+    .arrow {
+      font-size: 1.1rem;
+      color: #666;
+      margin: 0 8px;
     }
     button {
       padding: 8px 20px;
@@ -101,9 +111,9 @@
 <body>
 
 <div class="container">
-  <h1>성경 검색</h1>
-
-  <div class="search-row">
+  <!-- 타이틀 대신 버전 선택을 최상단에 배치 -->
+  <div class="version-row">
+    <label for="bibleVersion">성경 번역본:</label>
     <select id="bibleVersion">
       <option value="kornkrvs.json" selected>개역개정</option>
       <option value="korhrvs.json">개역한글</option>
@@ -114,16 +124,23 @@
       <option value="kortkvs.json">현대인의 성경</option>
       <option value="korklbs.json">현대어</option>
     </select>
-
-    <select id="startBook"><option value="">시작 책</option></select>
-    <select id="startChapter"><option value="">장</option></select>
-
-    <select id="endBook"><option value="">끝 책</option></select>
-    <select id="endChapter"><option value="">장</option></select>
   </div>
 
   <div class="search-row">
-    <input id="keyword" placeholder="검색어 (예: 사랑, 하나님)" style="flex:1; min-width:200px;">
+    <span class="range-label">검색 범위</span>
+
+    <select id="startBook">
+      <option value="">시작 책</option>
+    </select>
+
+    <span class="arrow">→</span>
+
+    <select id="endBook">
+      <option value="">끝 책</option>
+    </select>
+
+    <input id="keyword" placeholder="검색어 입력 (예: 사랑, 하나님)" style="flex:1; min-width:220px;">
+
     <button id="searchBtn">검색</button>
   </div>
 
@@ -131,7 +148,7 @@
 </div>
 
 <script>
-// ── 기본 데이터 ──────────────────────────────────────────────────────
+// ── 데이터 (변경 없음) ────────────────────────────────────────────────
 const BookList = [
   "창세기","출애굽기","레위기","민수기","신명기","여호수아","사사기","룻기",
   "사무엘상","사무엘하","열왕기상","열왕기하","역대상","역대하","에스라","느헤미야","에스더",
@@ -156,12 +173,10 @@ const BookChapterCount = {
 
 let BibleData = null;
 
-// DOM 요소
+// DOM
 const versionSelect   = document.getElementById("bibleVersion");
 const startBookSelect = document.getElementById("startBook");
-const startChSelect   = document.getElementById("startChapter");
 const endBookSelect   = document.getElementById("endBook");
-const endChSelect     = document.getElementById("endChapter");
 const keywordInput    = document.getElementById("keyword");
 const searchBtn       = document.getElementById("searchBtn");
 const resultDiv       = document.getElementById("result");
@@ -178,29 +193,9 @@ window.addEventListener('load', () => {
     });
   });
 
-  // 장 옵션 업데이트 함수
-  const updateChapters = (bookSel, chSel) => {
-    const book = bookSel.value;
-    chSel.innerHTML = '<option value="">장</option>';
-    if (!book) return;
-    const max = BookChapterCount[book] || 150;
-    for (let i = 1; i <= max; i++) {
-      const opt = document.createElement("option");
-      opt.value = i;
-      opt.textContent = i;
-      chSel.appendChild(opt);
-    }
-  };
-
-  // 이벤트 연결
-  startBookSelect.addEventListener('change', () => updateChapters(startBookSelect, startChSelect));
-  endBookSelect.addEventListener('change',   () => updateChapters(endBookSelect, endChSelect));
-
-  // 초기값 설정
+  // 초기값 : 전체 범위
   startBookSelect.value = BookList[0];
   endBookSelect.value   = BookList[BookList.length - 1];
-  updateChapters(startBookSelect, startChSelect);
-  updateChapters(endBookSelect, endChSelect);
 
   // 첫 데이터 로드
   loadBible(versionSelect.value);
@@ -212,23 +207,21 @@ async function loadBible(file) {
     const res = await fetch(file);
     if (!res.ok) throw new Error("파일 로드 실패");
     BibleData = await res.json();
-    resultDiv.innerHTML = '<p style="color:#6c757d; text-align:center;">성경 데이터 로드 완료</p>';
   } catch (err) {
-    resultDiv.innerHTML = `<p style="color:red; text-align:center;">오류: ${err.message}</p>`;
+    resultDiv.innerHTML = `<p style="color:red; text-align:center;">성경 파일 로드 실패: ${err.message}</p>`;
   }
 }
 
-// ── 검색 실행 ────────────────────────────────────────────────────────
+// ── 검색 ─────────────────────────────────────────────────────────────
 searchBtn.addEventListener('click', async () => {
   const kw = keywordInput.value.trim();
   if (!kw) {
-    resultDiv.innerHTML = '<p class="no-result">검색어를 입력해주세요.</p>';
+    resultDiv.innerHTML = '<p style="color:#777; text-align:center; padding:3rem 0;">검색어를 입력해주세요.</p>';
     return;
   }
 
   resultDiv.innerHTML = '<p style="color:#777; text-align:center; padding:4rem 0;">검색 중...</p>';
 
-  // 버전 변경 시 재로드
   if (!BibleData || versionSelect.value !== (document.querySelector("#bibleVersion").dataset.loaded || "")) {
     await loadBible(versionSelect.value);
     document.querySelector("#bibleVersion").dataset.loaded = versionSelect.value;
@@ -237,24 +230,21 @@ searchBtn.addEventListener('click', async () => {
   if (!BibleData) return;
 
   const lowerKw = kw.toLowerCase();
-  const bookGroups = {};  // { "창세기": { "1": [구절들], ... } }
+  const bookGroups = {};
   let totalCount = 0;
 
-  const startIdx = Math.max(0, BookList.indexOf(startBookSelect.value));
-  const endIdx   = Math.min(BookList.length - 1, BookList.indexOf(endBookSelect.value));
+  const startIdx = BookList.indexOf(startBookSelect.value);
+  const endIdx   = BookList.indexOf(endBookSelect.value);
 
   for (let i = startIdx; i <= endIdx; i++) {
     const book = BookList[i];
     const chapters = BibleData.books?.[book];
     if (!chapters) continue;
 
-    const minCh = (i === startIdx) ? (parseInt(startChSelect.value) || 1) : 1;
-    const maxCh = (i === endIdx)   ? (parseInt(endChSelect.value)   || 9999) : 9999;
+    let bookVersesByChapter = {};
 
-    for (let ch = minCh; ch <= maxCh; ch++) {
-      const verses = chapters[String(ch)];
-      if (!verses) continue;
-
+    for (const chStr in chapters) {
+      const verses = chapters[chStr];
       let chapterVerses = [];
 
       for (const v in verses) {
@@ -272,14 +262,17 @@ searchBtn.addEventListener('click', async () => {
       }
 
       if (chapterVerses.length > 0) {
-        if (!bookGroups[book]) bookGroups[book] = {};
-        bookGroups[book][String(ch)] = chapterVerses;
+        bookVersesByChapter[chStr] = chapterVerses;
       }
+    }
+
+    if (Object.keys(bookVersesByChapter).length > 0) {
+      bookGroups[book] = bookVersesByChapter;
     }
   }
 
   if (totalCount === 0) {
-    resultDiv.innerHTML = '<p class="no-result">검색 결과가 없습니다.</p>';
+    resultDiv.innerHTML = '<p style="color:#777; text-align:center; padding:3rem 0;">검색 결과가 없습니다.</p>';
     return;
   }
 
