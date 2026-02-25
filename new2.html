@@ -92,7 +92,7 @@
   <div class="modal-content">
     <span class="close" onclick="document.getElementById('modal').style.display='none'">×</span>
     
-    <!-- 번역본 + 책 + 장 선택 -->
+    <!-- 번역본 선택 -->
     <div class="modal-bible-version" style="margin-bottom: 12px;">
       <select id="modalBibleVersion">
         <option value="kornkrv.json" data-name="개역개정판" selected>개역개정판</option>
@@ -106,11 +106,13 @@
       </select>
     </div>
 
+    <!-- 책 선택 -->
     <div class="range-select">
       <label>책</label>
       <select id="modalBook"></select>
     </div>
 
+    <!-- 장 선택 -->
     <div class="range-select">
       <label>장</label>
       <select id="modalChapter"></select>
@@ -176,7 +178,7 @@
 </div>
 
 <script>
-// 데이터 (축약 버전, 실제로는 위에 있는 BookList와 BookChapterCount 사용)
+// 데이터
 const BookList = ["창세기","출애굽기","레위기","민수기","신명기","여호수아","사사기","룻기","사무엘상","사무엘하","열왕기상","열왕기하","역대상","역대하","에스라","느헤미야","에스더","욥기","시편","잠언","전도서","아가","이사야","예레미야","예레미야애가","에스겔","다니엘","호세아","요엘","아모스","오바댜","요나","미가","나훔","하박국","스바냐","학개","스가랴","말라기","마태복음","마가복음","누가복음","요한복음","사도행전","로마서","고린도전서","고린도후서","갈라디아서","에베소서","빌립보서","골로새서","데살로니가전서","데살로니가후서","디모데전서","디모데후서","디도서","빌레몬서","히브리서","야고보서","베드로전서","베드로후서","요한일서","요한이서","요한삼서","유다서","요한계시록"];
 
 const BookChapterCount = {"창세기":50,"출애굽기":40,"레위기":27,"민수기":36,"신명기":34,"여호수아":24,"사사기":21,"룻기":4,"사무엘상":31,"사무엘하":24,"열왕기상":22,"열왕기하":25,"역대상":29,"역대하":36,"에스라":10,"느헤미야":13,"에스더":10,"욥기":42,"시편":150,"잠언":31,"전도서":12,"아가":8,"이사야":66,"예레미야":52,"예레미야애가":5,"에스겔":48,"다니엘":12,"호세아":14,"요엘":3,"아모스":9,"오바댜":1,"요나":4,"미가":7,"나훔":3,"하박국":3,"스바냐":3,"학개":2,"스가랴":14,"말라기":4,"마태복음":28,"마가복음":16,"누가복음":24,"요한복음":21,"사도행전":28,"로마서":16,"고린도전서":16,"고린도후서":13,"갈라디아서":6,"에베소서":6,"빌립보서":4,"골로새서":4,"데살로니가전서":5,"데살로니가후서":3,"디모데전서":6,"디모데후서":4,"디도서":3,"빌레몬서":1,"히브리서":13,"야고보서":5,"베드로전서":5,"베드로후서":3,"요한일서":5,"요한이서":1,"요한삼서":1,"유다서":1,"요한계시록":22};
@@ -191,7 +193,7 @@ window.addEventListener('load', () => {
   loadState();
   loadBibleData(document.getElementById("bibleVersion").value);
   updateChapters();
-  initModalBookChapter(); // 모달 책·장 드롭다운 초기화
+  initModalBookChapter(); // 모달 책·장 초기화
 });
 
 // ── 월별 일수 ──────────────────────────────────────────────────────────────
@@ -224,7 +226,7 @@ for (let i = 0; i < 42; i++) {
   });
 }
 
-// 책·장 드롭다운
+// ── 책·장 드롭다운 ────────────────────────────────────────────────────────
 const bookSel = document.getElementById("book");
 BookList.forEach(b => {
   const opt = document.createElement("option");
@@ -273,26 +275,218 @@ function updateModalChapterOptions() {
   chSel.value = currentChapter || "1";
 }
 
-document.getElementById("modalBook").addEventListener("change", () => {
+document.getElementById("modalBook")?.addEventListener("change", () => {
   updateModalChapterOptions();
   currentBook = document.getElementById("modalBook").value;
   currentChapter = parseInt(document.getElementById("modalChapter").value) || 1;
   updateModalContent();
 });
 
-document.getElementById("modalChapter").addEventListener("change", () => {
+document.getElementById("modalChapter")?.addEventListener("change", () => {
   currentChapter = parseInt(document.getElementById("modalChapter").value) || 1;
   updateModalContent();
 });
 
-// ── 나머지 함수들 (기존 그대로 유지) ──────────────────────────────────────
-// (handleDateClick, getVerses, updateModalContent, changeChapter, handleMemoClick 등)
-// 이전 메시지에서 제공한 함수 그대로 사용하시면 됩니다.
+// ── 설정 저장·로드 ────────────────────────────────────────────────────────
+function saveSettings() {
+  localStorage.setItem("bibleCalendarSettings", JSON.stringify({
+    month: document.getElementById("month").value,
+    book: bookSel.value,
+    chapter: document.getElementById("chapter").value,
+    bibleVersion: document.getElementById("bibleVersion").value
+  }));
+}
 
-// ── 초기 로드 ─────────────────────────────────────────────────────────────
-loadSettings();
-loadState();
-loadBibleData(document.getElementById("bibleVersion").value);
+function loadSettings() {
+  const saved = localStorage.getItem("bibleCalendarSettings");
+  if (saved) {
+    const state = JSON.parse(saved);
+    if (state.month) document.getElementById("month").value = state.month;
+    if (state.book && BookList.includes(state.book)) bookSel.value = state.book;
+    updateChapters();
+    if (state.chapter) {
+      const chSel = document.getElementById("chapter");
+      if (Array.from(chSel.options).some(o => o.value == state.chapter)) chSel.value = state.chapter;
+    }
+    if (state.bibleVersion) {
+      document.getElementById("bibleVersion").value = state.bibleVersion;
+      document.getElementById("modalBibleVersion").value = state.bibleVersion;
+    }
+  } else {
+    bookSel.value = "창세기";
+    updateChapters();
+    document.getElementById("chapter").value = "1";
+  }
+}
+
+// ── 이벤트 ────────────────────────────────────────────────────────────────
+bookSel.addEventListener("change", () => { updateChapters(); saveSettings(); });
+document.getElementById("chapter").addEventListener("change", saveSettings);
+document.getElementById("month").addEventListener("change", saveSettings);
+document.getElementById("bibleVersion").addEventListener("change", e => {
+  const file = e.target.value;
+  document.getElementById("modalBibleVersion").value = file;
+  loadBibleData(file);
+  saveSettings();
+});
+
+document.getElementById("modalBibleVersion").addEventListener("change", e => {
+  const file = e.target.value;
+  document.getElementById("bibleVersion").value = file;
+  loadBibleData(file).then(updateModalContent);
+  saveSettings();
+});
+
+// ── 데이터 로드 ────────────────────────────────────────────────────────────
+function loadBibleData(fileName) {
+  return fetch(fileName)
+    .then(r => {
+      if (!r.ok) throw new Error("파일 로드 실패: " + fileName);
+      return r.json();
+    })
+    .then(data => {
+      BibleData = data;
+      console.log(`${fileName} 로드 완료`);
+    })
+    .catch(err => console.error(err));
+}
+
+// ── 상태 저장·로드 ────────────────────────────────────────────────────────
+function saveState() {
+  localStorage.setItem("bibleCalendarGrid", JSON.stringify({
+    dates: dateControls.map(d => d.textContent.trim()),
+    memos: memoControls.map(m => m.textContent.trim())
+  }));
+}
+
+function loadState() {
+  const saved = localStorage.getItem("bibleCalendarGrid");
+  if (saved) {
+    const state = JSON.parse(saved);
+    state.dates?.forEach((v,i) => { if(v) dateControls[i].textContent = v; });
+    state.memos?.forEach((v,i) => { if(v) memoControls[i].textContent = v; });
+  }
+}
+
+// ── 초기화 ────────────────────────────────────────────────────────────────
+document.getElementById("reset").onclick = () => {
+  dateControls.forEach(d => d.textContent = "");
+  memoControls.forEach(m => m.textContent = "");
+  saveState();
+  alert("달력이 초기화되었습니다.");
+};
+
+// ── 날짜 클릭 ─────────────────────────────────────────────────────────────
+function handleDateClick(startIdx) {
+  if (dateControls.some(d => d.textContent.trim() !== "")) return;
+
+  const maxDays = getMonthDays(document.getElementById("month").value);
+  let day = 1;
+  for (let i = startIdx; i < 42; i++) {
+    if (day > maxDays) break;
+    dateControls[i].textContent = day++;
+  }
+
+  let ch = parseInt(document.getElementById("chapter").value) || 1;
+  const maxCh = BookChapterCount[bookSel.value] || 150;
+  let idx = startIdx;
+  while (idx < 42 && ch <= maxCh) {
+    if (dateControls[idx].textContent.trim()) memoControls[idx].textContent = ch++ + "장";
+    idx++;
+  }
+  saveState();
+}
+
+// ── 구절 ──────────────────────────────────────────────────────────────────
+function getVerses(bookName, chapterNum) {
+  const verses = [];
+  if (BibleData.books?.[bookName]) {
+    const chStr = chapterNum.toString();
+    const chData = BibleData.books[bookName][chStr];
+    if (chData && typeof chData === 'object') {
+      for (const vStr in chData) {
+        const vNum = parseInt(vStr, 10);
+        if (!isNaN(vNum)) verses.push({verse: vNum, text: chData[vStr]});
+      }
+    }
+  }
+  return verses.sort((a,b) => a.verse - b.verse);
+}
+
+// ── 모달 업데이트 ─────────────────────────────────────────────────────────
+function updateModalContent() {
+  const verName = document.getElementById("modalBibleVersion").selectedOptions[0]?.dataset?.name || "성경";
+  document.getElementById("modalTitle").textContent = `${verName} ${currentBook} ${currentChapter}장`;
+
+  const content = document.getElementById("modalContent");
+  content.textContent = "로딩 중...";
+
+  const verses = getVerses(currentBook, currentChapter);
+  if (!verses.length) {
+    content.textContent = "해당 장의 내용이 없습니다.";
+    return;
+  }
+
+  content.textContent = verses.map(v => `${v.verse}  ${v.text}`).join("\n\n");
+  content.scrollTop = 0;
+}
+
+// ── 장 이동 ───────────────────────────────────────────────────────────────
+function changeChapter(delta) {
+  let newCh = currentChapter + delta;
+  const max = BookChapterCount[currentBook] || 150;
+  if (newCh < 1 || newCh > max) return;
+
+  currentChapter = newCh;
+
+  const prev = currentChapter <= 1;
+  const next = currentChapter >= max;
+
+  document.querySelectorAll("#prevChapterTop, #prevChapterBottom").forEach(b => b.disabled = prev);
+  document.querySelectorAll("#nextChapterTop, #nextChapterBottom").forEach(b => b.disabled = next);
+
+  updateModalContent();
+}
+
+// ── 메모 클릭 ─────────────────────────────────────────────────────────────
+function handleMemoClick(idx) {
+  const txt = memoControls[idx].textContent.trim();
+  if (!txt) return;
+  const ch = parseInt(txt);
+  if (isNaN(ch)) return;
+
+  currentBook = bookSel.value;
+  currentChapter = ch;
+  changeChapter(0);
+  document.getElementById("modal").style.display = "flex";
+}
+
+// ── 읽기 버튼 ─────────────────────────────────────────────────────────────
+document.getElementById("readButton").onclick = () => {
+  currentBook = bookSel.value;
+  currentChapter = parseInt(document.getElementById("chapter").value) || 1;
+  changeChapter(0);
+  document.getElementById("modal").style.display = "flex";
+};
+
+// ── 검색 모달 열기 ────────────────────────────────────────────────────────
+document.getElementById("searchButtonHeader").onclick = () => {
+  document.getElementById("searchModal").style.display = "flex";
+};
+
+document.getElementById("searchButtonModal").onclick = () => {
+  document.getElementById("modal").style.display = "none";
+  document.getElementById("searchModal").style.display = "flex";
+};
+
+// ── 초기 강제 실행 ────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  loadSettings();
+  loadState();
+  loadBibleData(document.getElementById("bibleVersion").value);
+  updateChapters();
+  initModalBookChapter();
+});
 </script>
 </body>
 </html>
