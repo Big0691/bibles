@@ -734,6 +734,13 @@ window.addEventListener('load', () => {
   updateChapters();
   initModalBookChapter();
 });
+  document.getElementById("searchButtonHeader").onclick = () => {
+  document.getElementById("searchModal").style.display = "flex";
+};
+
+document.getElementById("searchButtonModal").onclick = () => {
+  document.getElementById("searchModal").style.display = "flex";
+};
 </script>
 </body>
 </html>
