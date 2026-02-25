@@ -306,11 +306,26 @@
   </div>
 </div>
 
+<!-- 헤더 검색 모달 (번역본 드롭다운 추가) -->
 <div class="modal" id="searchModal">
   <div class="modal-content">
     <span class="close" onclick="document.getElementById('searchModal').style.display='none'">×</span>
     
-    <h3 id="searchModalTitle">성경 검색 결과</h3>
+    <h3 id="searchModalTitle">성경 검색</h3>
+
+    <!-- 번역본 선택 드롭다운 추가 -->
+    <div class="modal-bible-version" style="margin-bottom: 12px;">
+      <select id="searchBibleVersion">
+        <option value="kornkrvs.json" data-name="개역개정판" selected>개역개정판</option>
+        <option value="korhrvs.json" data-name="개역한글">개역한글</option>
+        <option value="korhkjvs.json" data-name="흠정역">흠정역</option>
+        <option value="kornrsvs.json" data-name="새번역">새번역</option>
+        <option value="koreasys.json" data-name="쉬운성경">쉬운성경</option>
+        <option value="kordobs.json" data-name="우리말성경">우리말성경</option>
+        <option value="kortkvs.json" data-name="현대어">현대어</option>
+        <option value="korklbs.json" data-name="현대인">현대인</option>
+      </select>
+    </div>
 
     <div class="search-container">
       <input id="searchInputHeader" class="search-input" placeholder="단어 또는 구절 검색 (예: 사랑, 요한복음 3:16)" />
@@ -802,6 +817,16 @@ document.getElementById("searchButtonModal").onclick = () => {
 loadSettings();
 loadState();
 loadBibleData(document.getElementById("bibleVersion").value);
+
+// 검색 모달 내 번역본 변경 시 데이터 다시 로드
+document.getElementById("searchBibleVersion").addEventListener("change", (e) => {
+  const file = e.target.value;
+  loadBibleData(file).then(() => {
+    // 변경 후 바로 검색창에 포커스
+    document.getElementById("searchInputHeader").focus();
+  });
+});
+
 </script>
 </body>
 </html>
