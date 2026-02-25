@@ -6,93 +6,95 @@
   <title>성경 검색</title>
   <style>
     body {
-      font-family: system-ui, sans-serif;
+      font-family: system-ui, -apple-system, sans-serif;
       margin: 20px;
       background: #f9f9f9;
       color: #222;
       line-height: 1.6;
     }
-    .container { max-width: 680px; margin: 0 auto; }
-    h1 { font-size: 1.5rem; margin-bottom: 1.2rem; }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin: 0 0 1rem;
+    }
     .search-row {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-bottom: 16px;
+      margin-bottom: 1rem;
     }
     select, input {
-      padding: 8px 10px;
+      padding: 8px 12px;
       font-size: 0.95rem;
       border: 1px solid #ccc;
-      border-radius: 5px;
+      border-radius: 6px;
+      min-width: 100px;
     }
     button {
-      padding: 8px 18px;
+      padding: 8px 20px;
       font-size: 0.95rem;
       background: #0066cc;
       color: white;
       border: none;
-      border-radius: 5px;
+      border-radius: 6px;
       cursor: pointer;
     }
-    button:hover { background: #0055aa; }
-
+    button:hover {
+      background: #0055aa;
+    }
     #result {
       margin-top: 1.5rem;
       background: white;
       border: 1px solid #ddd;
-      border-radius: 6px;
-      padding: 1.2rem 1.4rem;
+      border-radius: 8px;
+      padding: 1.2rem;
+      min-height: 300px;
     }
-
+    .total-info {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 1.2rem;
+    }
     .book-header {
-      font-size: 1.1rem;
+      font-size: 1.15rem;
       font-weight: bold;
-      margin: 1.8rem 0 0.8rem;
       color: #1a3c6d;
-      border-bottom: 1px solid #eee;
+      margin: 2rem 0 0.8rem;
       padding-bottom: 0.4rem;
+      border-bottom: 1px solid #eee;
     }
-
     .chapter-block {
-      margin: 1rem 0 1.8rem;
+      margin: 1.2rem 0 2rem;
     }
-
     .chapter-title {
       font-weight: 600;
       color: #334;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.6rem;
     }
-
     .verse-text {
-      margin: 0.4rem 0;
-      padding-left: 1.2rem;
-      text-indent: -1.2rem;
+      margin: 0.5rem 0;
+      padding-left: 1.4rem;
+      text-indent: -1.4rem;
+      font-size: 0.96rem;
     }
-
     .verse-num {
       color: #0066cc;
       font-weight: 600;
-      margin-right: 0.5em;
+      margin-right: 0.6em;
       font-size: 0.92rem;
     }
-
     mark {
       background: #fffacd;
-      padding: 1px 3px;
-      border-radius: 2px;
+      padding: 1px 4px;
+      border-radius: 3px;
     }
-
-    .total-info {
-      font-weight: 500;
-      color: #444;
-      margin-bottom: 1.2rem;
-    }
-
     .no-result {
       color: #777;
-      padding: 3rem 0;
       text-align: center;
+      padding: 4rem 0;
     }
   </style>
 </head>
@@ -115,12 +117,13 @@
 
     <select id="startBook"><option value="">시작 책</option></select>
     <select id="startChapter"><option value="">장</option></select>
+
     <select id="endBook"><option value="">끝 책</option></select>
     <select id="endChapter"><option value="">장</option></select>
   </div>
 
   <div class="search-row">
-    <input id="keyword" placeholder="검색어 입력" style="flex:1;">
+    <input id="keyword" placeholder="검색어 (예: 사랑, 하나님)" style="flex:1; min-width:200px;">
     <button id="searchBtn">검색</button>
   </div>
 
@@ -128,25 +131,95 @@
 </div>
 
 <script>
-// (BookList, BookChapterCount는 이전과 동일하게 유지)
-const BookList = [/* ... 생략 ... */];
-const BookChapterCount = { /* ... 생략 ... */ };
+// ── 기본 데이터 ──────────────────────────────────────────────────────
+const BookList = [
+  "창세기","출애굽기","레위기","민수기","신명기","여호수아","사사기","룻기",
+  "사무엘상","사무엘하","열왕기상","열왕기하","역대상","역대하","에스라","느헤미야","에스더",
+  "욥기","시편","잠언","전도서","아가","이사야","예레미야","예레미야애가","에스겔","다니엘",
+  "호세아","요엘","아모스","오바댜","요나","미가","나훔","하박국","스바냐","학개","스가랴","말라기",
+  "마태복음","마가복음","누가복음","요한복음","사도행전",
+  "로마서","고린도전서","고린도후서","갈라디아서","에베소서","빌립보서","골로새서",
+  "데살로니가전서","데살로니가후서","디모데전서","디모데후서","디도서","빌레몬서","히브리서",
+  "야고보서","베드로전서","베드로후서","요한일서","요한이서","요한삼서","유다서","요한계시록"
+];
+
+const BookChapterCount = {
+  "창세기":50,"출애굽기":40,"레위기":27,"민수기":36,"신명기":34,"여호수아":24,"사사기":21,"룻기":4,
+  "사무엘상":31,"사무엘하":24,"열왕기상":22,"열왕기하":25,"역대상":29,"역대하":36,"에스라":10,"느헤미야":13,"에스더":10,
+  "욥기":42,"시편":150,"잠언":31,"전도서":12,"아가":8,"이사야":66,"예레미야":52,"예레미야애가":5,"에스겔":48,"다니엘":12,
+  "호세아":14,"요엘":3,"아모스":9,"오바댜":1,"요나":4,"미가":7,"나훔":3,"하박국":3,"스바냐":3,"학개":2,"스가랴":14,"말라기":4,
+  "마태복음":28,"마가복음":16,"누가복음":24,"요한복음":21,"사도행전":28,
+  "로마서":16,"고린도전서":16,"고린도후서":13,"갈라디아서":6,"에베소서":6,"빌립보서":4,"골로새서":4,
+  "데살로니가전서":5,"데살로니가후서":3,"디모데전서":6,"디모데후서":4,"디도서":3,"빌레몬서":1,"히브리서":13,
+  "야고보서":5,"베드로전서":5,"베드로후서":3,"요한일서":5,"요한이서":1,"요한삼서":1,"유다서":1,"요한계시록":22
+};
 
 let BibleData = null;
 
-// DOM 요소들 (생략 없이 그대로)
+// DOM 요소
+const versionSelect   = document.getElementById("bibleVersion");
+const startBookSelect = document.getElementById("startBook");
+const startChSelect   = document.getElementById("startChapter");
+const endBookSelect   = document.getElementById("endBook");
+const endChSelect     = document.getElementById("endChapter");
+const keywordInput    = document.getElementById("keyword");
+const searchBtn       = document.getElementById("searchBtn");
+const resultDiv       = document.getElementById("result");
 
-window.addEventListener("load", () => {
-  // 책·장 select 채우기 로직 (이전과 동일)
-  // ... 생략 ...
+// ── 초기화 ───────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  // 책 목록 채우기
+  BookList.forEach(book => {
+    [startBookSelect, endBookSelect].forEach(sel => {
+      const opt = document.createElement("option");
+      opt.value = book;
+      opt.textContent = book;
+      sel.appendChild(opt);
+    });
+  });
+
+  // 장 옵션 업데이트 함수
+  const updateChapters = (bookSel, chSel) => {
+    const book = bookSel.value;
+    chSel.innerHTML = '<option value="">장</option>';
+    if (!book) return;
+    const max = BookChapterCount[book] || 150;
+    for (let i = 1; i <= max; i++) {
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = i;
+      chSel.appendChild(opt);
+    }
+  };
+
+  // 이벤트 연결
+  startBookSelect.addEventListener('change', () => updateChapters(startBookSelect, startChSelect));
+  endBookSelect.addEventListener('change',   () => updateChapters(endBookSelect, endChSelect));
+
+  // 초기값 설정
+  startBookSelect.value = BookList[0];
+  endBookSelect.value   = BookList[BookList.length - 1];
+  updateChapters(startBookSelect, startChSelect);
+  updateChapters(endBookSelect, endChSelect);
+
+  // 첫 데이터 로드
+  loadBible(versionSelect.value);
 });
 
+// ── 데이터 로드 ──────────────────────────────────────────────────────
 async function loadBible(file) {
-  // 이전과 동일
+  try {
+    const res = await fetch(file);
+    if (!res.ok) throw new Error("파일 로드 실패");
+    BibleData = await res.json();
+    resultDiv.innerHTML = '<p style="color:#6c757d; text-align:center;">성경 데이터 로드 완료</p>';
+  } catch (err) {
+    resultDiv.innerHTML = `<p style="color:red; text-align:center;">오류: ${err.message}</p>`;
+  }
 }
 
-// 검색 버튼 클릭 시
-searchButton.onclick = async () => {
+// ── 검색 실행 ────────────────────────────────────────────────────────
+searchBtn.addEventListener('click', async () => {
   const kw = keywordInput.value.trim();
   if (!kw) {
     resultDiv.innerHTML = '<p class="no-result">검색어를 입력해주세요.</p>';
@@ -155,6 +228,7 @@ searchButton.onclick = async () => {
 
   resultDiv.innerHTML = '<p style="color:#777; text-align:center; padding:4rem 0;">검색 중...</p>';
 
+  // 버전 변경 시 재로드
   if (!BibleData || versionSelect.value !== (document.querySelector("#bibleVersion").dataset.loaded || "")) {
     await loadBible(versionSelect.value);
     document.querySelector("#bibleVersion").dataset.loaded = versionSelect.value;
@@ -163,11 +237,11 @@ searchButton.onclick = async () => {
   if (!BibleData) return;
 
   const lowerKw = kw.toLowerCase();
-  const bookGroups = {};  // { "창세기": { "1": [구절들], "3": [구절들] } }
+  const bookGroups = {};  // { "창세기": { "1": [구절들], ... } }
   let totalCount = 0;
 
-  const startIdx = BookList.indexOf(startBookSelect.value) || 0;
-  const endIdx   = BookList.indexOf(endBookSelect.value)   || BookList.length - 1;
+  const startIdx = Math.max(0, BookList.indexOf(startBookSelect.value));
+  const endIdx   = Math.min(BookList.length - 1, BookList.indexOf(endBookSelect.value));
 
   for (let i = startIdx; i <= endIdx; i++) {
     const book = BookList[i];
@@ -223,14 +297,14 @@ searchButton.onclick = async () => {
       html += `
         <div class="chapter-block">
           <div class="chapter-title">${ch}장</div>
-          ${chapters[ch].map(v => `<div class="verse-text">${v}</div>`).join("")}
+          ${chapters[ch].map(v => `<div class="verse-text">${v}</div>`).join('')}
         </div>
       `;
     }
   }
 
   resultDiv.innerHTML = html;
-};
+});
 </script>
 </body>
 </html>
