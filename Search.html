@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>매일 성경읽기 달력</title>
+  <style>
+    /* ── 기존 스타일 그대로 유지 ── */
+    body {
+      font-family: "맑은 고딕", Malgun Gothic, "돋움", dotum, sans-serif;
+      margin: 0;
+      padding: 12px;
+      background: #f0f4f8;
+      color: #333;
+    }
+    .container {
+      max-width: 400px;
+      margin: 0 auto;
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+    }
+    h2 {
+      margin: 0 0 14px;
+      color: #2c3e50;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-align: center;
+    }
+    .title-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .title-text {
+      flex: 1;
+      text-align: center;
+      font-size: 1.05rem;
+    }
+    button {
+      padding: 6px 12px;
+      font-size: 13px;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    button:hover {
+      background: #2980b9;
+    }
+    .search-button {
+      background: #2ecc71;
+    }
+    .search-button:hover {
+      background: #27ae60;
+    }
+    .header {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header select {
+      flex: 1;
+      font-size: 13px;
+      padding: 6px 8px;
+    }
+    .weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      font-weight: bold;
+      color: #555;
+      margin: 6px 0;
+      font-size: 0.85rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 3px;
+    }
+    .cell {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background: #fafafa;
+      min-height: 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 3px;
+      cursor: pointer;
+    }
+    .cell:hover {
+      background: #e8f4fd;
+    }
+    .date {
+      font-weight: bold;
+      font-size: 12px;
+      color: #2c3e50;
+    }
+    .memo {
+      font-size: 10px;
+      color: #0066cc;
+      font-weight: bold;
+      background: #e6f2ff;
+      width: 100%;
+      text-align: center;
+      border-radius: 3px;
+      padding: 1px 0;
+    }
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 14px;
+      gap: 6px;
+    }
+    .bible-version {
+      flex: 1;
+      text-align: right;
+    }
+    .bible-version select {
+      width: auto;
+      min-width: 90px;
+      max-width: 140px;
+      padding: 5px 20px 5px 6px;
+      font-size: 12px;
+      border-radius: 6px;
+      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpolygon points='0,0 12,0 6,12' fill='%23333'/%3E%3C/svg%3E") no-repeat right 6px center;
+      background-size: 10px;
+      appearance: none;
+    }
+    .version-info {
+      text-align: center;
+      font-size: 10px;
+      color: #888;
+      margin-top: 6px;
+    }
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: white;
+      padding: 16px;
+      max-width: 90%;
+      max-height: 85vh;
+      overflow-y: auto;
+      border-radius: 10px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+      position: relative;
+    }
+    .close {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      font-size: 26px;
+      cursor: pointer;
+      color: #aaa;
+    }
+    .close:hover {
+      color: #333;
+    }
+    .chapter-nav, .chapter-nav-bottom {
+      display: flex;
+      justify-content: space-between;
+      margin: 8px 0;
+      gap: 6px;
+    }
+    .chapter-nav button, .chapter-nav-bottom button {
+      padding: 6px 12px;
+      font-size: 12px;
+      min-width: 70px;
+      flex: 1;
+    }
+    #modalTitle {
+      font-size: 16px;
+      margin: 0;
+      text-align: center;
+      flex: 1;
+      line-height: 1.3;
+    }
+    .modal-bible-version {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+    .modal-bible-version select {
+      width: auto;
+      min-width: 90px;
+      max-width: 140px;
+      padding: 5px 20px 5px 6px;
+      font-size: 12px;
+      border-radius: 6px;
+      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpolygon points='0,0 12,0 6,12' fill='%23333'/%3E%3C/svg%3E") no-repeat right 6px center;
+      background-size: 10px;
+      appearance: none;
+    }
+    .search-container {
+      display: flex;
+      gap: 6px;
+      margin: 8px 0;
+    }
+    .search-input {
+      flex: 1;
+      padding: 6px 8px;
+      font-size: 13px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+    }
+    .range-select {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin: 8px 0;
+    }
+    .range-select select {
+      flex: 1;
+      padding: 6px;
+      font-size: 13px;
+    }
+    .range-select label {
+      min-width: 50px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="title-bar">
+    <button id="headerSearchBtn" class="search-button">검색</button>
+    <div class="title-text">매일 성경읽기 달력</div>
+    <button id="readButton">읽기</button>
+  </div>
+
+  <div class="header">
+    <select id="month">
+      <option>1월</option><option>2월</option><option>3월</option><option>4월</option>
+      <option>5월</option><option>6월</option><option>7월</option><option>8월</option>
+      <option>9월</option><option>10월</option><option>11월</option><option>12월</option>
+    </select>
+    <select id="book"></select>
+    <select id="chapter"></select>
+  </div>
+
+  <div class="weekdays">
+    <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="footer">
+    <button id="reset">초기화</button>
+    <div class="bible-version">
+      <select id="bibleVersion">
+        <option value="kornkrvs.json" data-name="개역개정판" selected>개역개정판</option>
+        <option value="korhrvs.json" data-name="개역한글">개역한글</option>
+        <option value="korhkjvs.json" data-name="흠정역">흠정역</option>
+        <option value="kornrsvs.json" data-name="새번역">새번역</option>
+        <option value="koreasys.json" data-name="쉬운성경">쉬운성경</option>
+        <option value="kordobs.json" data-name="우리말성경">우리말성경</option>
+        <option value="kortkvs.json" data-name="현대어">현대어</option>
+        <option value="korklbs.json" data-name="현대인">현대인</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="version-info">(2026-02-18) ver 1.8 (8=성경종류)</div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <span class="close" onclick="document.getElementById('modal').style.display='none'">×</span>
+    
+    <div class="modal-bible-version" style="margin-bottom: 12px;">
+      <select id="modalBibleVersion">
+        <option value="kornkrvs.json" data-name="개역개정판" selected>개역개정판</option>
+        <option value="korhrvs.json" data-name="개역한글">개역한글</option>
+        <option value="korhkjvs.json" data-name="흠정역">흠정역</option>
+        <option value="kornrsvs.json" data-name="새번역">새번역</option>
+        <option value="koreasys.json" data-name="쉬운성경">쉬운성경</option>
+        <option value="kordobs.json" data-name="우리말성경">우리말성경</option>
+        <option value="kortkvs.json" data-name="현대어">현대어</option>
+        <option value="korklbs.json" data-name="현대인">현대인</option>
+      </select>
+    </div>
+
+    <div class="range-select">
+      <label>책</label>
+      <select id="modalBook"></select>
+    </div>
+
+    <div class="range-select">
+      <label>장</label>
+      <select id="modalChapter"></select>
+    </div>
+
+    <div class="chapter-nav">
+      <button id="prevChapterTop" onclick="changeChapter(-1)">◀ 이전</button>
+      <h3 id="modalTitle"></h3>
+      <button id="nextChapterTop" onclick="changeChapter(1)">다음 ▶</button>
+    </div>
+
+    <div style="text-align: center; margin: 16px 0;">
+      <button id="openSearchFromModal" class="search-button">검색 열기</button>
+    </div>
+
+    <pre id="modalContent" style="white-space: pre-wrap; line-height: 1.6;"></pre>
+
+    <div class="chapter-nav-bottom">
+      <button id="prevChapterBottom" onclick="changeChapter(-1)">◀ 이전</button>
+      <button id="nextChapterBottom" onclick="changeChapter(1)">다음 ▶</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="searchModal">
+  <div class="modal-content">
+    <span class="close" onclick="document.getElementById('searchModal').style.display='none'">×</span>
+    
+    <h3 id="searchModalTitle">성경 검색</h3>
+
+    <div class="modal-bible-version" style="margin-bottom: 16px; text-align: center;">
+      <select id="searchBibleVersion">
+        <option value="kornkrvs.json" data-name="개역개정판" selected>개역개정판</option>
+        <!-- 나머지 옵션 동일 -->
+        <option value="korhrvs.json" data-name="개역한글">개역한글</option>
+        <option value="korhkjvs.json" data-name="흠정역">흠정역</option>
+        <option value="kornrsvs.json" data-name="새번역">새번역</option>
+        <option value="koreasys.json" data-name="쉬운성경">쉬운성경</option>
+        <option value="kordobs.json" data-name="우리말성경">우리말성경</option>
+        <option value="kortkvs.json" data-name="현대어">현대어</option>
+        <option value="korklbs.json" data-name="현대인">현대인</option>
+      </select>
+    </div>
+
+    <div class="range-select">
+      <label>시작</label>
+      <select id="startBook" style="flex: 1;"></select>
+      <select id="startChapter" style="width: 80px;"><option value="">장</option></select>
+    </div>
+
+    <div class="range-select">
+      <label>끝</label>
+      <select id="endBook" style="flex: 1;"></select>
+      <select id="endChapter" style="width: 80px;"><option value="">장</option></select>
+    </div>
+
+    <div class="search-container">
+      <input id="searchKeyword" class="search-input" placeholder="키워드 (선택)" />
+      <button id="executeSearchBtn" class="search-button">검색</button>
+    </div>
+
+    <pre id="searchModalContent" style="white-space: pre-wrap; line-height: 1.6;"></pre>
+  </div>
+</div>
+
+<script>
+// ── 전역 변수 ───────────────────────────────────────────────────────────────
+const BookList = ["창세기","출애굽기","레위기","민수기","신명기","여호수아","사사기","룻기","사무엘상","사무엘하","열왕기상","열왕기하","역대상","역대하","에스라","느헤미야","에스더","욥기","시편","잠언","전도서","아가","이사야","예레미야","예레미야애가","에스겔","다니엘","호세아","요엘","아모스","오바댜","요나","미가","나훔","하박국","스바냐","학개","스가랴","말라기","마태복음","마가복음","누가복음","요한복음","사도행전","로마서","고린도전서","고린도후서","갈라디아서","에베소서","빌립보서","골로새서","데살로니가전서","데살로니가후서","디모데전서","디모데후서","디도서","빌레몬서","히브리서","야고보서","베드로전서","베드로후서","요한일서","요한이서","요한삼서","유다서","요한계시록"];
+
+const BookChapterCount = {"창세기":50,"출애굽기":40,"레위기":27,"민수기":36,"신명기":34,"여호수아":24,"사사기":21,"룻기":4,"사무엘상":31,"사무엘하":24,"열왕기상":22,"열왕기하":25,"역대상":29,"역대하":36,"에스라":10,"느헤미야":13,"에스더":10,"욥기":42,"시편":150,"잠언":31,"전도서":12,"아가":8,"이사야":66,"예레미야":52,"예레미야애가":5,"에스겔":48,"다니엘":12,"호세아":14,"요엘":3,"아모스":9,"오바댜":1,"요나":4,"미가":7,"나훔":3,"하박국":3,"스바냐":3,"학개":2,"스가랴":14,"말라기":4,"마태복음":28,"마가복음":16,"누가복음":24,"요한복음":21,"사도행전":28,"로마서":16,"고린도전서":16,"고린도후서":13,"갈라디아서":6,"에베소서":6,"빌립보서":4,"골로새서":4,"데살로니가전서":5,"데살로니가후서":3,"디모데전서":6,"디모데후서":4,"디도서":3,"빌레몬서":1,"히브리서":13,"야고보서":5,"베드로전서":5,"베드로후서":3,"요한일서":5,"요한이서":1,"요한삼서":1,"유다서":1,"요한계시록":22};
+
+let BibleData = {};
+let currentBook = "";
+let currentChapter = 1;
+
+const dateControls = [];
+const memoControls = [];
+
+// ── 유틸 함수 ───────────────────────────────────────────────────────────────
+function getMonthDays(monthStr) {
+  const m = parseInt(monthStr.replace("월", ""));
+  if (m === 2) return 28;
+  if ([4,6,9,11].includes(m)) return 30;
+  return 31;
+}
+
+function saveSettings() {
+  localStorage.setItem("bibleCalendarSettings", JSON.stringify({
+    month: document.getElementById("month").value,
+    book: document.getElementById("book").value,
+    chapter: document.getElementById("chapter").value,
+    bibleVersion: document.getElementById("bibleVersion").value
+  }));
+}
+
+function loadSettings() {
+  const saved = localStorage.getItem("bibleCalendarSettings");
+  if (saved) {
+    const state = JSON.parse(saved);
+    document.getElementById("month").value = state.month || "1월";
+    if (BookList.includes(state.book)) {
+      document.getElementById("book").value = state.book;
+    }
+    document.getElementById("bibleVersion").value = state.bibleVersion || "kornkrvs.json";
+    document.getElementById("modalBibleVersion").value = state.bibleVersion || "kornkrvs.json";
+    document.getElementById("searchBibleVersion").value = state.bibleVersion || "kornkrvs.json";
+  }
+  updateChapters();
+}
+
+function saveState() {
+  localStorage.setItem("bibleCalendarGrid", JSON.stringify({
+    dates: dateControls.map(d => d.textContent.trim()),
+    memos: memoControls.map(m => m.textContent.trim())
+  }));
+}
+
+function loadState() {
+  const saved = localStorage.getItem("bibleCalendarGrid");
+  if (saved) {
+    const state = JSON.parse(saved);
+    state.dates?.forEach((v,i) => { if(v) dateControls[i].textContent = v; });
+    state.memos?.forEach((v,i) => { if(v) memoControls[i].textContent = v; });
+  }
+}
+
+function loadBibleData(fileName) {
+  return fetch(fileName)
+    .then(r => {
+      if (!r.ok) throw new Error("파일 로드 실패: " + fileName);
+      return r.json();
+    })
+    .then(data => {
+      BibleData = data;
+      console.log(`${fileName} 로드 완료`);
+    })
+    .catch(err => console.error(err));
+}
+
+function updateChapters() {
+  const book = document.getElementById("book").value;
+  const max = BookChapterCount[book] || 150;
+  const chSel = document.getElementById("chapter");
+  chSel.innerHTML = "";
+  for (let i = 1; i <= max; i++) {
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = i + "장";
+    chSel.appendChild(opt);
+  }
+}
+
+function initModalBookChapter() {
+  const modalBook = document.getElementById("modalBook");
+  modalBook.innerHTML = "";
+  BookList.forEach(book => {
+    const opt = document.createElement("option");
+    opt.value = book;
+    opt.textContent = book;
+    modalBook.appendChild(opt);
+  });
+  modalBook.value = currentBook || "창세기";
+  updateModalChapterOptions();
+}
+
+function updateModalChapterOptions() {
+  const book = document.getElementById("modalBook").value;
+  const chSel = document.getElementById("modalChapter");
+  chSel.innerHTML = "";
+  const max = BookChapterCount[book] || 150;
+  for (let i = 1; i <= max; i++) {
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = i + "장";
+    chSel.appendChild(opt);
+  }
+  // 값이 존재하면 설정 (없으면 1로)
+  chSel.value = currentChapter.toString() || "1";
+}
+
+function getVerses(bookName, chapterNum) {
+  const verses = [];
+  if (BibleData.books?.[bookName]) {
+    const chStr = chapterNum.toString();
+    const chData = BibleData.books[bookName][chStr];
+    if (chData && typeof chData === 'object') {
+      for (const vStr in chData) {
+        const vNum = parseInt(vStr, 10);
+        if (!isNaN(vNum)) verses.push({verse: vNum, text: chData[vStr]});
+      }
+    }
+  }
+  return verses.sort((a,b) => a.verse - b.verse);
+}
+
+function updateModalContent() {
+  const verName = document.getElementById("modalBibleVersion").selectedOptions[0]?.dataset?.name || "성경";
+  document.getElementById("modalTitle").textContent = `${verName} ${currentBook} ${currentChapter}장`;
+
+  const content = document.getElementById("modalContent");
+  content.textContent = "로딩 중...";
+
+  const verses = getVerses(currentBook, currentChapter);
+  if (!verses.length) {
+    content.textContent = "해당 장의 내용이 없습니다.";
+    return;
+  }
+
+  content.textContent = verses.map(v => `${v.verse}  ${v.text}`).join("\n\n");
+  content.scrollTop = 0;
+}
+
+function changeChapter(delta) {
+  let newCh = currentChapter + delta;
+  const max = BookChapterCount[currentBook] || 150;
+  if (newCh < 1 || newCh > max) return;
+
+  currentChapter = newCh;
+
+  const prev = currentChapter <= 1;
+  const next = currentChapter >= max;
+
+  document.querySelectorAll("#prevChapterTop, #prevChapterBottom").forEach(b => b.disabled = prev);
+  document.querySelectorAll("#nextChapterTop, #nextChapterBottom").forEach(b => b.disabled = next);
+
+  // ★ 모달의 장 선택 드롭다운을 현재 장으로 동기화
+  const modalChapterSelect = document.getElementById("modalChapter");
+  if (modalChapterSelect) {
+    modalChapterSelect.value = currentChapter.toString();
+  }
+
+  updateModalContent();
+}
+
+function handleDateClick(startIdx) {
+  if (dateControls.some(d => d.textContent.trim() !== "")) return;
+
+  const maxDays = getMonthDays(document.getElementById("month").value);
+  let day = 1;
+  for (let i = startIdx; i < 42; i++) {
+    if (day > maxDays) break;
+    dateControls[i].textContent = day++;
+  }
+
+  let ch = parseInt(document.getElementById("chapter").value) || 1;
+  const maxCh = BookChapterCount[document.getElementById("book").value] || 150;
+  let idx = startIdx;
+  while (idx < 42 && ch <= maxCh) {
+    if (dateControls[idx].textContent.trim()) memoControls[idx].textContent = ch++ + "장";
+    idx++;
+  }
+  saveState();
+}
+
+function handleMemoClick(idx) {
+  const txt = memoControls[idx].textContent.trim();
+  if (!txt) return;
+  const ch = parseInt(txt);
+  if (isNaN(ch)) return;
+
+  currentBook = document.getElementById("book").value;
+  currentChapter = ch;
+
+  // 모달 열기 전에 드롭다운 미리 동기화
+  document.getElementById("modalBook").value = currentBook;
+  updateModalChapterOptions();
+  document.getElementById("modalChapter").value = currentChapter.toString();
+
+  changeChapter(0);
+  document.getElementById("modal").style.display = "flex";
+}
+
+// ── 초기화 및 이벤트 바인딩 ────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  // 그리드 셀 생성
+  const grid = document.getElementById("grid");
+  for (let i = 0; i < 42; i++) {
+    const cell = document.createElement("div");
+    cell.className = "cell";
+    const d = document.createElement("div"); d.className = "date";
+    const m = document.createElement("div"); m.className = "memo";
+    cell.appendChild(d);
+    cell.appendChild(m);
+    grid.appendChild(cell);
+    dateControls.push(d);
+    memoControls.push(m);
+
+    cell.addEventListener("click", e => {
+      if (e.target.classList.contains("memo")) handleMemoClick(i);
+      else handleDateClick(i);
+    });
+  }
+
+  // 책 선택지 채우기
+  const bookSel = document.getElementById("book");
+  BookList.forEach(b => {
+    const opt = document.createElement("option");
+    opt.textContent = b;
+    bookSel.appendChild(opt);
+  });
+
+  // 초기 설정 로드
+  loadSettings();
+  loadState();
+  loadBibleData(document.getElementById("bibleVersion").value);
+  updateChapters();
+  initModalBookChapter();
+
+  // ── 이벤트 리스너 등록 ───────────────────────────────────────────────
+  bookSel.addEventListener("change", () => { updateChapters(); saveSettings(); });
+  document.getElementById("chapter").addEventListener("change", saveSettings);
+  document.getElementById("month").addEventListener("change", saveSettings);
+
+  document.getElementById("bibleVersion").addEventListener("change", e => {
+    const file = e.target.value;
+    document.getElementById("modalBibleVersion").value = file;
+    document.getElementById("searchBibleVersion").value = file;
+    loadBibleData(file);
+    saveSettings();
+  });
+
+  document.getElementById("modalBibleVersion").addEventListener("change", e => {
+    const file = e.target.value;
+    document.getElementById("bibleVersion").value = file;
+    document.getElementById("searchBibleVersion").value = file;
+    loadBibleData(file).then(updateModalContent);
+    saveSettings();
+  });
+
+  document.getElementById("modalBook").addEventListener("change", () => {
+    updateModalChapterOptions();
+    currentBook = document.getElementById("modalBook").value;
+    currentChapter = parseInt(document.getElementById("modalChapter").value) || 1;
+    updateModalContent();
+  });
+
+  document.getElementById("modalChapter").addEventListener("change", () => {
+    currentChapter = parseInt(document.getElementById("modalChapter").value) || 1;
+    updateModalContent();
+  });
+
+  // 읽기 버튼
+  document.getElementById("readButton").onclick = () => {
+    currentBook = document.getElementById("book").value;
+    currentChapter = parseInt(document.getElementById("chapter").value) || 1;
+
+    // 모달 드롭다운 미리 동기화
+    document.getElementById("modalBook").value = currentBook;
+    updateModalChapterOptions();
+    document.getElementById("modalChapter").value = currentChapter.toString();
+
+    changeChapter(0);
+    document.getElementById("modal").style.display = "flex";
+  };
+
+  // 검색 모달 열기 (헤더)
+  document.getElementById("headerSearchBtn").onclick = () => {
+    document.getElementById("searchModal").style.display = "flex";
+  };
+
+  // 모달 → 검색 모달 열기
+  document.getElementById("openSearchFromModal").onclick = () => {
+    document.getElementById("modal").style.display = "none";
+    document.getElementById("searchModal").style.display = "flex";
+  };
+
+  // 초기화 버튼
+  document.getElementById("reset").onclick = () => {
+    dateControls.forEach(d => d.textContent = "");
+    memoControls.forEach(m => m.textContent = "");
+    saveState();
+    alert("달력이 초기화되었습니다.");
+  };
+
+  // 검색 실행 버튼 (아직 미완성)
+  document.getElementById("executeSearchBtn").onclick = () => {
+    const keyword = document.getElementById("searchKeyword").value.trim();
+    const version = document.getElementById("searchBibleVersion").value;
+    document.getElementById("searchModalContent").textContent = 
+      `검색 기능 준비 중입니다.\n\n번역: ${version}\n키워드: "${keyword}"\n\n(아직 구현되지 않음)`;
+  };
+});
+</script>
+</body>
+</html>
