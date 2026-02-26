@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>매일 성경읽기 달력</title>
   <style>
-    /* ── 기존 스타일 그대로 유지 ── */
     body {
       font-family: "맑은 고딕", Malgun Gothic, "돋움", dotum, sans-serif;
       margin: 0;
@@ -20,13 +19,6 @@
       padding: 15px;
       border-radius: 10px;
       box-shadow: 0 3px 12px rgba(0,0,0,0.08);
-    }
-    h2 {
-      margin: 0 0 14px;
-      color: #2c3e50;
-      font-size: 0.95rem;
-      font-weight: 600;
-      text-align: center;
     }
     .title-bar {
       display: flex;
@@ -142,6 +134,8 @@
       color: #888;
       margin-top: 6px;
     }
+
+    /* 읽기 모달 */
     .modal {
       position: fixed;
       inset: 0;
@@ -207,33 +201,43 @@
       background-size: 10px;
       appearance: none;
     }
-    .search-container {
-      display: flex;
-      gap: 6px;
-      margin: 8px 0;
-    }
-    .search-input {
-      flex: 1;
-      padding: 6px 8px;
-      font-size: 13px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-    }
-    .range-select {
-      display: flex;
-      gap: 8px;
+
+    /* 검색 겹침 모달 (불투명 전체 화면) */
+    #searchOverlay {
+      position: fixed;
+      inset: 0;
+      background: #ffffff;
+      z-index: 3000;
+      display: none;
       align-items: center;
-      margin: 8px 0;
+      justify-content: center;
     }
-    .range-select select {
-      flex: 1;
-      padding: 6px;
-      font-size: 13px;
+    #searchOverlay .modal-content {
+      width: 100%;
+      height: 100%;
+      max-width: none;
+      max-height: none;
+      padding: 0;
+      margin: 0;
+      border-radius: 0;
+      box-shadow: none;
+      background: #fff;
+      overflow: hidden;
+      position: relative;
     }
-    .range-select label {
-      min-width: 50px;
-      font-size: 14px;
-      font-weight: bold;
+    #searchOverlay .close {
+      position: absolute;
+      top: 12px;
+      right: 15px;
+      font-size: 40px;
+      color: #333;
+      z-index: 10;
+      cursor: pointer;
+    }
+    #searchFrame {
+      width: 100%;
+      height: 100%;
+      border: none;
     }
   </style>
 </head>
@@ -241,9 +245,7 @@
 
 <div class="container">
   <div class="title-bar">
-  <a href="Search.html">
-    <button class="search-button">검색</button>
-  </a>
+    <button id="headerSearchBtn" class="search-button">검색</button>
     <div class="title-text">매일 성경읽기 달력</div>
     <button id="readButton">읽기</button>
   </div>
@@ -283,6 +285,7 @@
   <div class="version-info">(2026-02-18) ver 1.8 (8=성경종류)</div>
 </div>
 
+<!-- 읽기 모달 -->
 <div class="modal" id="modal">
   <div class="modal-content">
     <span class="close" onclick="document.getElementById('modal').style.display='none'">×</span>
@@ -300,13 +303,11 @@
       </select>
     </div>
 
-    <!-- 책 선택 -->
     <div class="range-select">
       <label>책</label>
       <select id="modalBook"></select>
     </div>
 
-    <!-- 장 선택 -->
     <div class="range-select">
       <label>장</label>
       <select id="modalChapter"></select>
@@ -324,6 +325,14 @@
       <button id="prevChapterBottom" onclick="changeChapter(-1)">◀ 이전</button>
       <button id="nextChapterBottom" onclick="changeChapter(1)">다음 ▶</button>
     </div>
+  </div>
+</div>
+
+<!-- 검색 겹침 모달 (불투명 전체 화면) -->
+<div id="searchOverlay" style="display:none;">
+  <div class="modal-content">
+    <span class="close" onclick="document.getElementById('searchOverlay').style.display='none'; document.body.style.overflow='';">×</span>
+    <iframe id="searchFrame" src="" frameborder="0"></iframe>
   </div>
 </div>
 
@@ -608,6 +617,27 @@ window.addEventListener('load', () => {
 
     changeChapter(0);
     document.getElementById("modal").style.display = "flex";
+  };
+
+  // 검색 버튼 → 불투명 겹침 모달 열기
+  document.getElementById("headerSearchBtn").onclick = () => {
+    const modal = document.getElementById("searchOverlay");
+    const frame = document.getElementById("searchFrame");
+
+    // iframe 새로고침 (캐시 방지)
+    frame.src = "about:blank";
+    setTimeout(() => {
+      frame.src = "Search.html";  // 파일명 맞춰주세요
+    }, 100);
+
+    modal.style.display = "block";
+    document.body.style.overflow = "hidden";  // 본문 스크롤 막기
+  };
+
+  // 검색 모달 닫기 시 스크롤 복구
+  document.querySelector("#searchOverlay .close").onclick = () => {
+    document.getElementById("searchOverlay").style.display = "none";
+    document.body.style.overflow = "";
   };
 
   // 초기화 버튼
