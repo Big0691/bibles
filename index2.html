@@ -12,7 +12,7 @@
       background: #f0f4f8;
       color: #333;
     }
-    .container, .search-container {
+    .container {
       max-width: 400px;
       margin: 0 auto;
       background: white;
@@ -39,6 +39,7 @@
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      white-space: nowrap;
     }
     button:hover {
       background: #2980b9;
@@ -49,19 +50,17 @@
     .search-button:hover {
       background: #27ae60;
     }
-    .header, .search-row {
+    .header {
       display: flex;
       gap: 6px;
       margin-bottom: 14px;
       justify-content: space-between;
       align-items: center;
     }
-    select, input {
+    .header select {
       flex: 1;
       font-size: 13px;
       padding: 6px 8px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
     }
     .weekdays {
       display: grid;
@@ -136,30 +135,153 @@
       margin-top: 6px;
     }
 
-    /* 검색 페이지 스타일 (필요한 부분만 통합) */
-    #searchPage {
+    /* 읽기 모달 */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
       display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
     }
-    .search-result-item {
-      padding: 8px 0;
-      border-bottom: 1px solid #eee;
+    .modal-content {
+      background: white;
+      padding: 16px;
+      max-width: 90%;
+      max-height: 85vh;
+      overflow-y: auto;
+      border-radius: 10px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+      position: relative;
+    }
+    .close {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      font-size: 26px;
       cursor: pointer;
+      color: #aaa;
     }
-    .search-result-item:hover {
-      background: #f8f9fa;
+    .close:hover {
+      color: #333;
     }
-    mark {
-      background: #fffacd;
-      padding: 1px 3px;
-      border-radius: 2px;
+    .chapter-nav, .chapter-nav-bottom {
+      display: flex;
+      justify-content: space-between;
+      margin: 8px 0;
+      gap: 6px;
+    }
+    .chapter-nav button, .chapter-nav-bottom button {
+      padding: 6px 12px;
+      font-size: 12px;
+      min-width: 70px;
+      flex: 1;
+    }
+    #modalTitle {
+      font-size: 16px;
+      margin: 0;
+      text-align: center;
+      flex: 1;
+      line-height: 1.3;
+    }
+    .modal-bible-version {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+    .modal-bible-version select {
+      width: auto;
+      min-width: 90px;
+      max-width: 140px;
+      padding: 5px 20px 5px 6px;
+      font-size: 12px;
+      border-radius: 6px;
+      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpolygon points='0,0 12,0 6,12' fill='%23333'/%3E%3C/svg%3E") no-repeat right 6px center;
+      background-size: 10px;
+      appearance: none;
+    }
+
+    /* 책·장 한 줄 배치 */
+    .book-chapter-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 12px 0;
+      flex-wrap: nowrap;
+    }
+    .book-chapter-row label {
+      min-width: 40px;
+      font-weight: bold;
+      text-align: right;
+      white-space: nowrap;
+    }
+    .book-chapter-row select {
+      padding: 8px;
+      font-size: 14px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      flex: 1;
+    }
+    #modalBook {
+      flex: 2;
+    }
+    #modalChapter {
+      flex: 1;
+      max-width: 110px;
+    }
+
+    /* 검색 겹침 모달 (불투명 전체 화면) */
+    #searchOverlay {
+      position: fixed;
+      inset: 0;
+      background: #ffffff;
+      z-index: 3000;
+      display: none;
+      pointer-events: none;
+    }
+    #searchOverlay.show {
+      pointer-events: auto;
+    }
+    #searchOverlay .modal-content {
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      margin: 0;
+      border-radius: 0;
+      box-shadow: none;
+      overflow: hidden;
+      background: #fff;
+      position: relative;
+    }
+    #searchCloseBtn {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 42px;
+      color: #333;
+      cursor: pointer;
+      z-index: 10;
+      background: rgba(255,255,255,0.9);
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 44px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    #searchFrame {
+      width: 100%;
+      height: 100%;
+      border: none;
     }
   </style>
 </head>
 <body>
 
-<div class="container" id="mainPage">
+<div class="container">
   <div class="title-bar">
-    <button id="showSearch">검색</button>
+    <button id="headerSearchBtn" class="search-button">검색</button>
     <div class="title-text">매일 성경읽기 달력</div>
     <button id="readButton">읽기</button>
   </div>
@@ -199,38 +321,6 @@
   <div class="version-info">(2026-02-18) ver 1.8 (8=성경종류)</div>
 </div>
 
-<!-- 검색 페이지 (숨김 상태로 통합) -->
-<div id="searchPage" class="search-container">
-  <div class="title-bar">
-    <button id="backToMain">← 뒤로</button>
-    <div class="title-text">성경 검색</div>
-  </div>
-
-  <div class="search-row">
-    <select id="bibleVersionSearch">
-      <option value="kornkrvs.json" selected>개역개정</option>
-      <option value="korhrvs.json">개역한글</option>
-      <option value="korhkjvs.json">흠정역</option>
-      <option value="kornrsvs.json">새번역</option>
-      <option value="koreasys.json">쉬운성경</option>
-      <option value="kordobs.json">우리말성경</option>
-      <option value="kortkvs.json">현대인의성경</option>
-      <option value="korklbs.json">현대어</option>
-    </select>
-
-    <select id="startBook"></select>
-    <span>→</span>
-    <select id="endBook"></select>
-  </div>
-
-  <div class="search-row">
-    <input id="keyword" placeholder="검색어 입력" style="flex:1;">
-    <button id="searchBtn">검색</button>
-  </div>
-
-  <div id="result"></div>
-</div>
-
 <!-- 읽기 모달 -->
 <div class="modal" id="modal">
   <div class="modal-content">
@@ -249,6 +339,7 @@
       </select>
     </div>
 
+    <!-- 책 + 장 한 줄 배치 -->
     <div class="book-chapter-row">
       <label>책</label>
       <select id="modalBook"></select>
@@ -271,8 +362,16 @@
   </div>
 </div>
 
+<!-- 검색 겹침 모달 -->
+<div id="searchOverlay">
+  <div class="modal-content">
+    <span id="searchCloseBtn">×</span>
+    <iframe id="searchFrame" src="" frameborder="0"></iframe>
+  </div>
+</div>
+
 <script>
-// ── 공통 데이터 ─────────────────────────────────────────────────────────────
+// ── 전역 변수 ───────────────────────────────────────────────────────────────
 const BookList = ["창세기","출애굽기","레위기","민수기","신명기","여호수아","사사기","룻기","사무엘상","사무엘하","열왕기상","열왕기하","역대상","역대하","에스라","느헤미야","에스더","욥기","시편","잠언","전도서","아가","이사야","예레미야","예레미야애가","에스겔","다니엘","호세아","요엘","아모스","오바댜","요나","미가","나훔","하박국","스바냐","학개","스가랴","말라기","마태복음","마가복음","누가복음","요한복음","사도행전","로마서","고린도전서","고린도후서","갈라디아서","에베소서","빌립보서","골로새서","데살로니가전서","데살로니가후서","디모데전서","디모데후서","디도서","빌레몬서","히브리서","야고보서","베드로전서","베드로후서","요한일서","요한이서","요한삼서","유다서","요한계시록"];
 
 const BookChapterCount = {"창세기":50,"출애굽기":40,"레위기":27,"민수기":36,"신명기":34,"여호수아":24,"사사기":21,"룻기":4,"사무엘상":31,"사무엘하":24,"열왕기상":22,"열왕기하":25,"역대상":29,"역대하":36,"에스라":10,"느헤미야":13,"에스더":10,"욥기":42,"시편":150,"잠언":31,"전도서":12,"아가":8,"이사야":66,"예레미야":52,"예레미야애가":5,"에스겔":48,"다니엘":12,"호세아":14,"요엘":3,"아모스":9,"오바댜":1,"요나":4,"미가":7,"나훔":3,"하박국":3,"스바냐":3,"학개":2,"스가랴":14,"말라기":4,"마태복음":28,"마가복음":16,"누가복음":24,"요한복음":21,"사도행전":28,"로마서":16,"고린도전서":16,"고린도후서":13,"갈라디아서":6,"에베소서":6,"빌립보서":4,"골로새서":4,"데살로니가전서":5,"데살로니가후서":3,"디모데전서":6,"디모데후서":4,"디도서":3,"빌레몬서":1,"히브리서":13,"야고보서":5,"베드로전서":5,"베드로후서":3,"요한일서":5,"요한이서":1,"요한삼서":1,"유다서":1,"요한계시록":22};
@@ -284,7 +383,7 @@ let currentChapter = 1;
 const dateControls = [];
 const memoControls = [];
 
-// ── 유틸 함수 (달력 관련) ──────────────────────────────────────────────────
+// ── 유틸 함수 ───────────────────────────────────────────────────────────────
 function getMonthDays(monthStr) {
   const m = parseInt(monthStr.replace("월", ""));
   if (m === 2) return 28;
@@ -306,8 +405,11 @@ function loadSettings() {
   if (saved) {
     const state = JSON.parse(saved);
     document.getElementById("month").value = state.month || "1월";
-    if (BookList.includes(state.book)) document.getElementById("book").value = state.book;
+    if (BookList.includes(state.book)) {
+      document.getElementById("book").value = state.book;
+    }
     document.getElementById("bibleVersion").value = state.bibleVersion || "kornkrvs.json";
+    document.getElementById("modalBibleVersion").value = state.bibleVersion || "kornkrvs.json";
   }
   updateChapters();
 }
@@ -331,7 +433,7 @@ function loadState() {
 function loadBibleData(fileName) {
   return fetch(fileName)
     .then(r => {
-      if (!r.ok) throw new Error("파일 로드 실패");
+      if (!r.ok) throw new Error("파일 로드 실패: " + fileName);
       return r.json();
     })
     .then(data => {
@@ -354,7 +456,6 @@ function updateChapters() {
   }
 }
 
-// ── 읽기 모달 관련 ────────────────────────────────────────────────────────
 function initModalBookChapter() {
   const modalBook = document.getElementById("modalBook");
   modalBook.innerHTML = "";
@@ -428,12 +529,51 @@ function changeChapter(delta) {
   document.querySelectorAll("#nextChapterTop, #nextChapterBottom").forEach(b => b.disabled = next);
 
   const modalChapterSelect = document.getElementById("modalChapter");
-  if (modalChapterSelect) modalChapterSelect.value = currentChapter.toString();
+  if (modalChapterSelect) {
+    modalChapterSelect.value = currentChapter.toString();
+  }
 
   updateModalContent();
 }
 
-// ── 초기화 ────────────────────────────────────────────────────────────────
+function handleDateClick(startIdx) {
+  if (dateControls.some(d => d.textContent.trim() !== "")) return;
+
+  const maxDays = getMonthDays(document.getElementById("month").value);
+  let day = 1;
+  for (let i = startIdx; i < 42; i++) {
+    if (day > maxDays) break;
+    dateControls[i].textContent = day++;
+  }
+
+  let ch = parseInt(document.getElementById("chapter").value) || 1;
+  const maxCh = BookChapterCount[document.getElementById("book").value] || 150;
+  let idx = startIdx;
+  while (idx < 42 && ch <= maxCh) {
+    if (dateControls[idx].textContent.trim()) memoControls[idx].textContent = ch++ + "장";
+    idx++;
+  }
+  saveState();
+}
+
+function handleMemoClick(idx) {
+  const txt = memoControls[idx].textContent.trim();
+  if (!txt) return;
+  const ch = parseInt(txt);
+  if (isNaN(ch)) return;
+
+  currentBook = document.getElementById("book").value;
+  currentChapter = ch;
+
+  document.getElementById("modalBook").value = currentBook;
+  updateModalChapterOptions();
+  document.getElementById("modalChapter").value = currentChapter.toString();
+
+  changeChapter(0);
+  document.getElementById("modal").style.display = "flex";
+}
+
+// ── 초기화 및 이벤트 바인딩 ────────────────────────────────────────────────
 window.addEventListener('load', () => {
   // 그리드 셀 생성
   const grid = document.getElementById("grid");
@@ -469,7 +609,7 @@ window.addEventListener('load', () => {
   updateChapters();
   initModalBookChapter();
 
-  // 이벤트 리스너
+  // ── 이벤트 리스너 등록 ───────────────────────────────────────────────
   bookSel.addEventListener("change", () => { updateChapters(); saveSettings(); });
   document.getElementById("chapter").addEventListener("change", saveSettings);
   document.getElementById("month").addEventListener("change", saveSettings);
@@ -500,6 +640,7 @@ window.addEventListener('load', () => {
     updateModalContent();
   });
 
+  // 읽기 버튼
   document.getElementById("readButton").onclick = () => {
     currentBook = document.getElementById("book").value;
     currentChapter = parseInt(document.getElementById("chapter").value) || 1;
@@ -512,35 +653,54 @@ window.addEventListener('load', () => {
     document.getElementById("modal").style.display = "flex";
   };
 
+  // 검색 버튼 → 불투명 겹침 모달 열기
+  document.getElementById("headerSearchBtn").onclick = () => {
+    const overlay = document.getElementById("searchOverlay");
+    const frame = document.getElementById("searchFrame");
+
+    overlay.style.display = "block";
+    overlay.style.visibility = "visible";
+    overlay.style.pointerEvents = "auto";
+    overlay.style.zIndex = "3000";
+
+    document.body.style.overflow = "hidden";
+
+    frame.src = "about:blank";
+    setTimeout(() => {
+      frame.src = "Search.html";
+    }, 100);
+  };
+
+  // 검색 모달 닫기 (완전 잔상 제거)
+  document.getElementById("searchCloseBtn").onclick = () => {
+    const overlay = document.getElementById("searchOverlay");
+    const frame = document.getElementById("searchFrame");
+
+    overlay.style.display = "none";
+    overlay.style.visibility = "hidden";
+    overlay.style.pointerEvents = "none";
+    overlay.style.zIndex = "-1";
+
+    document.body.style.overflow = "";
+
+    frame.src = "about:blank";
+
+    try {
+      const doc = frame.contentDocument || frame.contentWindow.document;
+      if (doc) {
+        doc.open();
+        doc.write("");
+        doc.close();
+      }
+    } catch (e) {}
+  };
+
+  // 초기화 버튼
   document.getElementById("reset").onclick = () => {
     dateControls.forEach(d => d.textContent = "");
     memoControls.forEach(m => m.textContent = "");
     saveState();
     alert("달력이 초기화되었습니다.");
-  };
-
-  // ── 검색 페이지 전환 (하나의 페이지 안에서) ────────────────────────────────
-  document.getElementById("showSearch").onclick = () => {
-    document.getElementById("mainPage").style.display = "none";
-    document.getElementById("searchPage").style.display = "block";
-  };
-
-  document.getElementById("backToMain").onclick = () => {
-    document.getElementById("searchPage").style.display = "none";
-    document.getElementById("mainPage").style.display = "block";
-  };
-
-  // 검색 기능 (Search.html에서 가져온 로직 통합 - 필요 시 간소화 가능)
-  document.getElementById("searchBtn").onclick = async () => {
-    const kw = document.getElementById("keyword").value.trim();
-    if (!kw) return alert("검색어를 입력해주세요.");
-
-    const resultDiv = document.getElementById("result");
-    resultDiv.innerHTML = "검색 중...";
-
-    // 여기서 실제 검색 로직 구현 (예: fetch나 미리 로드된 BibleData 사용)
-    // 지금은 예시로 간단히 표시
-    resultDiv.innerHTML = `<p>"${kw}" 검색 결과 (예시)</p>`;
   };
 });
 </script>
