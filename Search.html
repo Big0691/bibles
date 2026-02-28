@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>성경</title>
+  <title>성경 검색</title>
   <style>
     body {
       margin: 0;
@@ -24,7 +24,7 @@
       display: flex;
       gap: 8px;
     }
-    select {
+    select, input {
       padding: 10px;
       font-size: 16px;
       border: 1px solid #ccc;
@@ -42,14 +42,6 @@
       gap: 6px;
       font-size: 18px;
       color: #555;
-    }
-    input {
-      flex: 1;
-      min-width: 140px;
-      padding: 12px;
-      font-size: 17px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
     }
     button {
       padding: 12px 24px;
@@ -110,143 +102,147 @@
 </head>
 <body>
 
-<div class="container">
-  <div class="top">
-    <select id="bibleVersion">
-      <option value="kornkrvs.json" selected>개역개정</option>
-      <option value="korhrvs.json">개역한글</option>
-      <option value="korhkjvs.json">흠정역</option>
-      <option value="kornrsvs.json">새번역</option>
-      <option value="koreasys.json">쉬운성경</option>
-      <option value="kordobs.json">우리말성경</option>
-      <option value="kortkvs.json">현대인의성경</option>
-      <option value="korklbs.json">현대어</option>
-    </select>
-  </div>
+<!-- 상단 닫기 버튼 -->
+<!-- <div style="position:fixed; top:0; left:0; right:0; background:#ffffff; padding:12px 16px; text-align:right; z-index:50; box-shadow:0 2px 8px rgba(0,0,0,0.15);"> -->
+  <button onclick="history.back()" style="font-size:25px; background:transparent; border:none; color:#e74c3c; cursor:pointer; padding:0 16px; line-height:1;"></button>
+</div>
+<div style="margin-top:30px; padding:16px;">
 
-  <div class="main-search">
-    <div class="range">
-      <select id="startBook"></select>
-      <span>→</span>
-      <select id="endBook"></select>
+  <div class="container">
+    <div class="top">
+      <select id="bibleVersion">
+        <option value="kornkrvs.json" selected>개역개정</option>
+        <option value="Korhrvs.json">개역한글</option>
+        <option value="korhkjvs.json">흠정역</option>
+        <option value="kornrsvs.json">새번역</option>
+        <option value="koreasys.json">쉬운성경</option>
+        <option value="kordobs.json">우리말성경</option>
+        <option value="kortkvs.json">현대인의 성경</option>
+        <option value="korklbs.json">현대어</option>
+      </select>
     </div>
-    <input id="keyword" placeholder="검색어">
-    <button id="searchBtn">검색</button>
-  </div>
 
-  <div id="result"></div>
+    <div class="main-search">
+      <div class="range">
+        <select id="startBook"></select>
+        <span>→</span>
+        <select id="endBook"></select>
+      </div>
+      <input id="keyword" placeholder="검색어">
+      <button id="searchBtn">검색</button>
+    </div>
+
+    <div id="result"></div>
+  </div>
 </div>
 
 <script>
-const BookList = ["창세기","출애굽기","레위기","민수기","신명기","여호수아","사사기","룻기","사무엘상","사무엘하","열왕기상","열왕기하","역대상","역대하","에스라","느헤미야","에스더","욥기","시편","잠언","전도서","아가","이사야","예레미야","예레미야애가","에스겔","다니엘","호세아","요엘","아모스","오바댜","요나","미가","나훔","하박국","스바냐","학개","스가랴","말라기","마태복음","마가복음","누가복음","요한복음","사도행전","로마서","고린도전서","고린도후서","갈라디아서","에베소서","빌립보서","골로새서","데살로니가전서","데살로니가후서","디모데전서","디모데후서","디도서","빌레몬서","히브리서","야고보서","베드로전서","베드로후서","요한일서","요한이서","요한삼서","유다서","요한계시록"];
+  const BookList = ["창세기","출애굽기","레위기","민수기","신명기","여호수아","사사기","룻기","사무엘상","사무엘하","열왕기상","열왕기하","역대상","역대하","에스라","느헤미야","에스더","욥기","시편","잠언","전도서","아가","이사야","예레미야","예레미야애가","에스겔","다니엘","호세아","요엘","아모스","오바댜","요나","미가","나훔","하박국","스바냐","학개","스가랴","말라기","마태복음","마가복음","누가복음","요한복음","사도행전","로마서","고린도전서","고린도후서","갈라디아서","에베소서","빌립보서","골로새서","데살로니가전서","데살로니가후서","디모데전서","디모데후서","디도서","빌레몬서","히브리서","야고보서","베드로전서","베드로후서","요한일서","요한이서","요한삼서","유다서","요한계시록"];
 
-let BibleData = null;
+  let BibleData = null;
 
-const versionSelect = document.getElementById("bibleVersion");
-const startBook = document.getElementById("startBook");
-const endBook = document.getElementById("endBook");
-const keyword = document.getElementById("keyword");
-const searchBtn = document.getElementById("searchBtn");
-const result = document.getElementById("result");
+  const versionSelect = document.getElementById("bibleVersion");
+  const startBook = document.getElementById("startBook");
+  const endBook = document.getElementById("endBook");
+  const keyword = document.getElementById("keyword");
+  const searchBtn = document.getElementById("searchBtn");
+  const result = document.getElementById("result");
 
-window.addEventListener('load', () => {
-  BookList.forEach(b => {
-    [startBook, endBook].forEach(s => {
-      let o = document.createElement("option");
-      o.value = o.textContent = b;
-      s.appendChild(o);
+  // ── 초기화 + 자동 로드 ─────────────────────────────────────
+  window.addEventListener('load', () => {
+    // 책 목록 채우기
+    BookList.forEach(b => {
+      [startBook, endBook].forEach(s => {
+        let o = document.createElement("option");
+        o.value = o.textContent = b;
+        s.appendChild(o);
+      });
     });
+    startBook.value = BookList[0];
+    endBook.value = BookList[BookList.length - 1];
+
+    // ★★★ 자동 실행 부분 ★★★
+    // 1. 개역개정 먼저 로드
+    setTimeout(() => {
+      loadBible("kornkrvs.json");
+    }, 300);
+
+    // 2. 800ms 후에 개역한글로 자동 변경
+    setTimeout(() => {
+      versionSelect.value = "Korhrvs.json";
+      loadBible("Korhrvs.json");
+    }, 800);
   });
 
-  startBook.value = BookList[0];
-  endBook.value = BookList.at(-1);
-
-  loadBible(versionSelect.value);
-});
-
-async function loadBible(file) {
-  try {
-    let r = await fetch(file);
-    if (!r.ok) throw 0;
-    BibleData = await r.json();
-  } catch {
-    result.innerHTML = '<p style="color:red;text-align:center">성경 파일을 불러올 수 없습니다</p>';
-  }
-}
-
-searchBtn.onclick = async () => {
-  let kw = keyword.value.trim();
-  if (!kw) return result.innerHTML = '<p style="color:#777;text-align:center;padding:3rem 0">검색어를 입력하세요</p>';
-
-  result.innerHTML = '<p style="color:#777;text-align:center;padding:4rem 0">검색 중...</p>';
-
-  if (!BibleData || versionSelect.value !== (versionSelect.dataset.loaded || '')) {
-    await loadBible(versionSelect.value);
-    versionSelect.dataset.loaded = versionSelect.value;
+  // ── 데이터 로드 함수 ─────────────────────────────────────
+  async function loadBible(file) {
+    try {
+      const res = await fetch(file);
+      if (!res.ok) throw new Error("파일 로드 실패");
+      BibleData = await res.json();
+      result.innerHTML = `<p style="color:green">번역본 로드 완료: ${versionSelect.options[versionSelect.selectedIndex].text}</p>`;
+    } catch (err) {
+      result.innerHTML = `<p style="color:red">성경 파일 로드 실패: ${err.message}</p>`;
+    }
   }
 
-  if (!BibleData) return;
+  // 번역본 수동 변경 시에도 로드
+  versionSelect.addEventListener("change", () => {
+    if (versionSelect.value) loadBible(versionSelect.value);
+  });
 
-  let low = kw.toLowerCase();
-  let groups = {};
-  let total = 0;
+  // ── 검색 기능 (기존 그대로) ─────────────────────────────────────
+  searchBtn.addEventListener('click', async () => {
+    let kw = keyword.value.trim();
+    if (!kw) return result.innerHTML = '<p style="color:#777;text-align:center;padding:3rem 0">검색어를 입력하세요</p>';
+    if (!BibleData) return result.innerHTML = '<p style="color:#777;text-align:center;padding:3rem 0">먼저 번역본을 선택하세요</p>';
 
-  let sIdx = BookList.indexOf(startBook.value);
-  let eIdx = BookList.indexOf(endBook.value);
+    result.innerHTML = '<p style="color:#777;text-align:center;padding:4rem 0">검색 중...</p>';
 
-  for (let i = sIdx; i <= eIdx; i++) {
-    let book = BookList[i];
-    let chaps = BibleData.books?.[book];
-    if (!chaps) continue;
+    let low = kw.toLowerCase();
+    let groups = {};
+    let total = 0;
+    let sIdx = BookList.indexOf(startBook.value);
+    let eIdx = BookList.indexOf(endBook.value);
 
-    let bookChaps = {};
+    for (let i = sIdx; i <= eIdx; i++) {
+      let book = BookList[i];
+      let chaps = BibleData.books?.[book];
+      if (!chaps) continue;
 
-    for (let chStr in chaps) {
-      let verses = chaps[chStr];
-      let chapVerses = [];
+      let bookChaps = {};
+      for (let chStr in chaps) {
+        let verses = chaps[chStr];
+        let chapVerses = [];
+        for (let v in verses) {
+          let txt = verses[v];
+          if (typeof txt !== "string") continue;
+          if (!txt.toLowerCase().includes(low)) continue;
 
-      for (let v in verses) {
-        let txt = verses[v];
-        if (typeof txt !== "string") continue;
-        if (!txt.toLowerCase().includes(low)) continue;
-
-        let hl = txt.replace(
-          new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"gi"),
-          m => `<mark>${m}</mark>`
-        );
-
-        chapVerses.push(`<span class="vnum">${v}</span>${hl}`);
-        total++;
+          let hl = txt.replace(new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"gi"), m => `<mark>${m}</mark>`);
+          chapVerses.push(`<span class="vnum">${v}</span>${hl}`);
+          total++;
+        }
+        if (chapVerses.length) bookChaps[chStr] = chapVerses;
       }
-
-      if (chapVerses.length) bookChaps[chStr] = chapVerses;
+      if (Object.keys(bookChaps).length) groups[book] = bookChaps;
     }
 
-    if (Object.keys(bookChaps).length) groups[book] = bookChaps;
-  }
-
-  if (total === 0) {
-    result.innerHTML = '<p style="color:#777;text-align:center;padding:3rem 0">결과 없음</p>';
-    return;
-  }
-
-  let html = `<div class="total">총 ${total}개</div>`;
-
-  for (let book in groups) {
-    html += `<div class="book">${book}</div>`;
-    let chaps = groups[book];
-    for (let ch in chaps) {
-      html += `
-        <div class="chap">
-          <div class="chapter-title">${ch}장</div>
-          ${chaps[ch].map(v => `<div class="verse">${v}</div>`).join('')}
-        </div>
-      `;
+    if (total === 0) {
+      result.innerHTML = '<p style="color:#777;text-align:center;padding:3rem 0">결과 없음</p>';
+      return;
     }
-  }
 
-  result.innerHTML = html;
-};
+    let html = `<div class="total">총 ${total}개</div>`;
+    for (let book in groups) {
+      html += `<div class="book">${book}</div>`;
+      let chaps = groups[book];
+      for (let ch in chaps) {
+        html += `<div class="chap"><div class="chap-title">${ch}장</div>${chaps[ch].map(v => `<div class="verse">${v}</div>`).join('')}</div>`;
+      }
+    }
+    result.innerHTML = html;
+  });
 </script>
 </body>
 </html>
