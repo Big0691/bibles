@@ -47,14 +47,63 @@
       background: white;
       overflow-y: auto;
     }
-    .controls { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
-    select { padding: 8px; font-size: 15px; border-radius: 6px; border: 1px solid #ccc; flex: 1; }
-    .nav-buttons { display: flex; justify-content: space-between; margin: 16px 0; }
-    .nav-btn { padding: 10px 24px; font-size: 15px; background: #0066cc; color: white; border: none; border-radius: 6px; cursor: pointer; }
-    .nav-btn:disabled { background: #aaa; cursor: not-allowed; }
-    #chapter-title { text-align: center; font-size: 18px; font-weight: bold; margin: 12px 0; }
-    #content { line-height: 1.7; font-size: 16px; white-space: pre-wrap; word-break: keep-all; }
-    .verse-num { color: #0066cc; font-weight: bold; margin-right: 8px; }
+   .container {
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 16px;
+      background: white;
+      min-height: 100vh;
+    }
+	
+    .controls {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    select {
+      padding: 8px;
+      font-size: 15px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      flex: 1;
+    }
+    .nav-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin: 16px 0;
+    }
+    .nav-btn {
+      padding: 10px 24px;
+      font-size: 15px;
+      background: #0066cc;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .nav-btn:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+    #chapter-title {
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      margin: 12px 0;
+    }
+    #content {
+      line-height: 1.7;
+      font-size: 16px;
+      white-space: pre-wrap;
+      word-break: keep-all;
+    }
+    .verse-num {
+      color: #0066cc;
+      font-weight: bold;
+      margin-right: 8px;
+    }
   </style>
 </head>
 <body>
