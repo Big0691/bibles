@@ -277,9 +277,10 @@
 
 <div class="container">
   <div class="title-bar">
-    <button id="headerSearchBtn" class="search-button">검색</button>
+	<!-- 방법 1: onclick으로 바로 이동 (가장 간단) -->
+	<button id="headerSearchBtn" class="search-button" onclick="window.location.href='Search.html'">검색</button>
     <div class="title-text">매일 성경읽기 달력</div>
-    <button id="readButton">읽기</button>
+    <button id="readButton" onclick="window.location.href='read.html'">읽기</button>
   </div>
 
   <div class="header">
@@ -653,7 +654,8 @@ window.addEventListener('load', () => {
     updateModalContent();
   });
 
-  // 읽기 버튼
+// =============================================================================
+  /* // 읽기 묘듈 버튼 
   document.getElementById("readButton").onclick = () => {
     currentBook = document.getElementById("book").value;
     currentChapter = parseInt(document.getElementById("chapter").value) || 1;
@@ -665,7 +667,22 @@ window.addEventListener('load', () => {
     changeChapter(0);
     document.getElementById("modal").style.display = "flex";
   };
+*/
 
+// 읽기 버튼 (모달 대신 read.html로 이동)
+document.getElementById("readButton").onclick = () => {
+  const book = document.getElementById("book").value || "창세기";
+  const chapter = parseInt(document.getElementById("chapter").value) || 1;
+
+  // 마지막 읽은 위치 저장 (read.html에서 자동 불러옴)
+  localStorage.setItem("lastReadBook", book);
+  localStorage.setItem("lastReadChapter", chapter);
+
+  // read.html로 이동
+  window.location.href = "read.html";
+};
+// ============================================================================
+/*
   // 검색 버튼
   document.getElementById("headerSearchBtn").onclick = () => {
     const modal = document.getElementById("searchOverlay");
@@ -689,6 +706,7 @@ window.addEventListener('load', () => {
     document.body.style.overflow = "";
     frame.src = "about:blank";
   };
+  */
 
   // 초기화 버튼
   document.getElementById("reset").onclick = () => {
