@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>성경 읽기</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "맑은 고딕", Malgun Gothic, "돋움", dotum, sans-serif;
+      background: #f0f4f8;
+      color: #333;
+    }
+	
+	/* 위쪽 라인 */
+    header {
+      background: #0066cc;
+      color: white;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .back-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 28px;
+      cursor: pointer; /* 매인 버튼 */
+	  margin: 0 auto; 
+    }
+    .title {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .container {
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 16px;
+      background: white;
+      min-height: 100vh;
+    }
+	
+    .controls {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    select {
+      padding: 8px;
+      font-size: 15px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      flex: 1;
+    }
+    .nav-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin: 16px 0;
+    }
+    .nav-btn {
+      padding: 10px 24px;
+      font-size: 15px;
+      background: #0066cc;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .nav-btn:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+    #chapter-title {
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      margin: 12px 0;
+    }
+    #content {
+      line-height: 1.7;
+      font-size: 16px;
+      white-space: pre-wrap;
+      word-break: keep-all;
+    }
+    .verse-num {
+      color: #0066cc;
+      font-weight: bold;
+      margin-right: 8px;
+    }
+	
+  </style>
+</head>
+<body>
+
+<header>
+<button class="back-btn" 
+        onclick="window.location.href='index.html'" 
+        style="font-size: 20px; padding: 8px 12px; display: inline-flex; align-items: center; justify-content: center; min-width: 80px; line-height: 1;">메인</button>
+
+<div style="margin-top:5px; padding:10px;">
+
+</header>
+
+<div class="container">
+  <div class="controls">
+    <select id="bibleVersion">
+      <option value="kornkrvs.json" selected>개역개정</option>
+      <option value="Korhrvs.json">개역한글</option>
+      <option value="korhkjvs.json">흠정역</option>
+      <option value="kornrsvs.json">새번역</option>
+      <option value="koreasys.json">쉬운성경</option>
+      <option value="kordobs.json">우리말성경</option>
+      <option value="kortkvs.json">현대인의 성경</option>
+      <option value="korklbs.json">현대어</option>
+    </select>
+  </div>
+
+  <div class="controls">
+    <select id="book"></select>
+    <select id="chapter"></select>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn" id="prevBtn" onclick="changeChapter(-1)">◀ 이전</button>
+    <h2 id="chapter-title">Loading...</h2>
+    <button class="nav-btn" id="nextBtn" onclick="changeChapter(1)">다음 ▶</button>
+  </div>
+
+  <div id="content"></div>
+
+  <div class="nav-buttons" style="margin-top:24px;">
+    <button class="nav-btn" id="prevBottom" onclick="changeChapter(-1)">◀ 이전 장</button>
+    <button class="nav-btn" id="nextBottom" onclick="changeChapter(1)">다음 장 ▶</button>
+  </div>
+</div>
+
+<script>
+  // BookList (index.html과 동일하게 복사)
+  const BookList = ["창세기","출애굽기","레위기","민수기","신명기","여호수아","사사기","룻기","사무엘상","사무엘하","열왕기상","열왕기하","역대상","역대하","에스라","느헤미야","에스더","욥기","시편","잠언","전도서","아가","이사야","예레미야","예레미야애가","에스겔","다니엘","호세아","요엘","아모스","오바댜","요나","미가","나훔","하박국","스바냐","학개","스가랴","말라기","마태복음","마가복음","누가복음","요한복음","사도행전","로마서","고린도전서","고린도후서","갈라디아서","에베소서","빌립보서","골로새서","데살로니가전서","데살로니가후서","디모데전서","디모데후서","디도서","빌레몬서","히브리서","야고보서","베드로전서","베드로후서","요한일서","요한이서","요한삼서","유다서","요한계시록"];
+
+  const BookChapterCount = { /* 책당 장 수 - index.html에 있던 것 그대로 복사하세요 */ 
+    "창세기":50, "출애굽기":40, "레위기":27, "민수기":36, "신명기":34, /* ... 나머지 생략, 전체 복사 필요 */ 
+  };
+
+  let currentBook = "창세기";
+  let currentChapter = 1;
+  let currentVersion = "kornkrvs.json";
+
+  // 마지막 읽은 위치 불러오기
+  function loadLastRead() {
+    currentBook = localStorage.getItem("lastReadBook") || "창세기";
+    currentChapter = parseInt(localStorage.getItem("lastReadChapter")) || 1;
+    currentVersion = localStorage.getItem("lastBibleVersion") || "kornkrvs.json";
+    
+    document.getElementById("bibleVersion").value = currentVersion;
+    document.getElementById("book").value = currentBook;
+    updateChapterSelect();
+    document.getElementById("chapter").value = currentChapter;
+  }
+
+  // 책 선택지 채우기
+  function fillBookSelect() {
+    const sel = document.getElementById("book");
+    sel.innerHTML = "";
+    BookList.forEach(b => {
+      const opt = document.createElement("option");
+      opt.value = opt.textContent = b;
+      sel.appendChild(opt);
+    });
+  }
+
+  // 장 선택지 업데이트
+  function updateChapterSelect() {
+    const book = document.getElementById("book").value;
+    const sel = document.getElementById("chapter");
+    sel.innerHTML = "";
+    const count = BookChapterCount[book] || 1;
+    for (let i = 1; i <= count; i++) {
+      const opt = document.createElement("option");
+      opt.value = opt.textContent = i;
+      sel.appendChild(opt);
+    }
+  }
+
+  // 이전/다음 장 이동
+  function changeChapter(delta) {
+    let newChapter = currentChapter + delta;
+    const max = BookChapterCount[currentBook] || 1;
+    if (newChapter < 1) newChapter = 1;
+    if (newChapter > max) newChapter = max;
+    
+    currentChapter = newChapter;
+    document.getElementById("chapter").value = currentChapter;
+    loadChapter();
+  }
+
+  // 실제 내용 로드 (여기서 fetch 사용)
+  async function loadChapter() {
+    try {
+      const title = document.getElementById("chapter-title");
+      const content = document.getElementById("content");
+      title.textContent = `${currentBook} ${currentChapter}장`;
+      content.innerHTML = "로딩 중...";
+
+      // 실제 JSON 파일 로드 (WebViewAssetLoader 사용 중이라면 /assets/ 경로)
+      const res = await fetch(`/assets/${currentVersion}`);
+      if (!res.ok) throw new Error("파일 로드 실패");
+      const data = await res.json();
+
+      // JSON 구조에 따라 verse 추출 (예시 구조 가정)
+      const bookData = data.books?.[currentBook]?.[currentChapter];
+      if (!bookData) throw new Error("장 데이터 없음");
+
+      let html = "";
+      for (let v in bookData) {
+        html += `<span class="verse-num">${v}</span>${bookData[v]}<br><br>`;
+      }
+      content.innerHTML = html || "내용이 없습니다.";
+
+      // 저장 (다음에 열 때 자동으로 이 위치)
+      localStorage.setItem("lastReadBook", currentBook);
+      localStorage.setItem("lastReadChapter", currentChapter);
+      localStorage.setItem("lastBibleVersion", currentVersion);
+    } catch (err) {
+      document.getElementById("content").innerHTML = `<p style="color:red">오류: ${err.message}</p>`;
+    }
+  }
+
+  // 초기화
+  window.addEventListener('load', () => {
+    fillBookSelect();
+    loadLastRead();
+    document.getElementById("book").addEventListener("change", () => {
+      currentBook = document.getElementById("book").value;
+      updateChapterSelect();
+      loadChapter();
+    });
+    document.getElementById("chapter").addEventListener("change", () => {
+      currentChapter = parseInt(document.getElementById("chapter").value);
+      loadChapter();
+    });
+    document.getElementById("bibleVersion").addEventListener("change", () => {
+      currentVersion = document.getElementById("bibleVersion").value;
+      loadChapter();
+    });
+    loadChapter(); // 처음 로드
+  });
+</script>
+</body>
+</html>
