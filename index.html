@@ -550,7 +550,7 @@
 
           // "1월" 같은 텍스트가 저장되어 있을 수 있으므로 숫자만 추출
           let m = state.month;
-          if (m && m.endsWith("월")) m = m.replace("월", "");
+          if (m && m.toString().endsWith("월")) m = m.toString().replace("월", "");
           document.getElementById("month").value = m || (new Date().getMonth() + 1);
 
           if (BookList.includes(state.book)) {
@@ -795,6 +795,9 @@
         yearSelect.appendChild(opt);
       }
       yearSelect.value = currentYear;
+
+      // 현재 월 초기화 (기본값)
+      document.getElementById("month").value = new Date().getMonth() + 1;
 
       // 그리드 셀 생성
       const grid = document.getElementById("grid");
