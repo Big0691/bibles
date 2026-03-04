@@ -540,22 +540,33 @@
     function loadSettings() {
       const saved = localStorage.getItem("bibleCalendarSettings");
       if (saved) {
-        const state = JSON.parse(saved);
-        if (state.year) document.getElementById("year").value = state.year;
-        document.getElementById("month").value = state.month || (new Date().getMonth() + 1).toString();
-        if (BookList.includes(state.book)) {
-          document.getElementById("book").value = state.book;
-        }
-        if (state.chapter) {
-          document.getElementById("chapter").value = state.chapter;
-        }
-        document.getElementById("bibleVersion").value = state.bibleVersion || "kornkrvs.json";
-        document.getElementById("modalBibleVersion").value = state.bibleVersion || "kornkrvs.json";
+        try {
+          const state = JSON.parse(saved);
+          if (state.year) {
+            document.getElementById("year").value = state.year;
+          } else {
+            document.getElementById("year").value = new Date().getFullYear();
+          }
+
+          // "1월" 같은 텍스트가 저장되어 있을 수 있으므로 숫자만 추출
+          let m = state.month;
+          if (m && m.endsWith("월")) m = m.replace("월", "");
+          document.getElementById("month").value = m || (new Date().getMonth() + 1);
+
+          if (BookList.includes(state.book)) {
+            document.getElementById("book").value = state.book;
+          }
+          if (state.chapter) {
+            document.getElementById("chapter").value = state.chapter;
+          }
+          document.getElementById("bibleVersion").value = state.bibleVersion || "kornkrvs.json";
+          document.getElementById("modalBibleVersion").value = state.bibleVersion || "kornkrvs.json";
+        } catch (e) { }
       } else {
         // 앱 처음 실행 시 기본값 (현재 년/월 셋팅)
         const now = new Date();
-        document.getElementById("year").value = now.getFullYear().toString();
-        document.getElementById("month").value = (now.getMonth() + 1).toString();
+        document.getElementById("year").value = now.getFullYear();
+        document.getElementById("month").value = now.getMonth() + 1;
       }
       updateChapters();
     }
