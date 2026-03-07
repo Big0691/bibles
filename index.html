@@ -379,25 +379,27 @@
         style="color: #0066cc; text-decoration: underline; font-weight: bold;">앱 다운로드 링크 (구글 드라이브)</a>
 
 
-    <script>
-        // txt 파일의 경로 (같은 폴더일 경우 파일명만 적음)
-        const filePath = 'data.txt';
+<script>
+    // txt 파일의 경로
+    const filePath = 'data.txt';
 
-        fetch(filePath)
-            .then(response => {
-                if (!response.ok) throw new Error('파일을 찾을 수 없습니다.');
-                return response.text();
-            })
-            .then(data => {
-                document.getElementById('content').textContent = data;
-            })
-            .catch(error => {
-                document.getElementById('content').textContent = '오류: ' + error.message;
-            });
-    </script>
-  
-  <script>
+    // 스타일 없이 자바스크립트로 중앙 정렬 강제 적용
+    const contentBox = document.getElementById('content');
+    contentBox.style.textAlign = 'center';      /* 가로 중앙 */
+    contentBox.style.whiteSpace = 'pre-wrap';   /* 줄바꿈 유지 */
 
+    fetch(filePath)
+        .then(response => {
+            if (!response.ok) throw new Error('파일을 찾을 수 없습니다.');
+            return response.text();
+        })
+        .then(data => {
+            contentBox.textContent = data;
+        })
+        .catch(error => {
+            contentBox.textContent = '오류: ' + error.message;
+        });
+</script>
 
 
 
