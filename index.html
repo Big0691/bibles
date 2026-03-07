@@ -391,29 +391,33 @@
   </div> <!-- container 끝 -->
 
 
-  <script>
-    // txt 파일의 경로
-    const filePath = 'data.txt';
+<script>
+  const filePath = 'data.txt';
+  const contentBox = document.getElementById('content');
 
-    // 스타일 없이 자바스크립트로 중앙 정렬 강제 적용
-    const contentBox = document.getElementById('content');
-    if (contentBox) {
-      contentBox.style.textAlign = 'center';      /* 가로 중앙 */
-      contentBox.style.whiteSpace = 'pre-wrap';   /* 줄바꿈 유지 */
+  if (contentBox) {
+    // 전체 중앙 정렬
+    contentBox.style.textAlign = 'center';
+    // 줄 간격이 좁다면 아래 코드로 조절 가능합니다.
+    contentBox.style.lineHeight = '1.6'; 
 
-      fetch(filePath)
-        .then(response => {
-          if (!response.ok) throw new Error('파일을 찾을 수 없습니다.');
-          return response.text();
-        })
-        .then(data => {
-          contentBox.textContent = data;
-        })
-        .catch(error => {
-          contentBox.textContent = '오류: ' + error.message;
-        });
-    }
-  </script>
+    fetch(filePath)
+      .then(response => {
+        if (!response.ok) throw new Error('파일을 찾을 수 없습니다.');
+        return response.text();
+      })
+      .then(data => {
+        // [수정 포인트] 텍스트를 줄 단위로 쪼개서 각 줄을 <div>로 변환
+        const lines = data.split(/\r?\n/);
+        contentBox.innerHTML = lines
+          .map(line => `<div>${line}</div>`)
+          .join('');
+      })
+      .catch(error => {
+        contentBox.textContent = '오류: ' + error.message;
+      });
+  }
+</script>
 
 
 
