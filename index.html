@@ -8,6 +8,31 @@
   <link rel="stylesheet" href="mean.css">
   
 </head>
+    <style>
+        /* 메모장 스타일 박스 */
+        .notepad {
+            width: 80%;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff9c4; /* 메모지 연노랑색 */
+            border: 1px solid #d4d4d4;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.1);
+            font-family: 'Courier New', Courier, monospace; /* 고정폭 글꼴 */
+            line-height: 1.6;
+            white-space: pre-wrap; /* 줄바꿈 및 공백 유지 */
+            min-height: 300px;
+            position: relative;
+        }
+
+        /* 메모지 줄무늬 효과 (선택 사항) */
+        .notepad::before {
+            content: "";
+            position: absolute;
+            top: 0; bottom: 0; left: 40px;
+            border-left: 1px solid #ffadad; /* 왼쪽 빨간 세로선 */
+        }
+    </style>
 
 <body>
 
@@ -82,33 +107,23 @@
   </div> <!-- container 끝 -->
 
 
-<script>
-  const filePath = 'data.txt';
-  const contentBox = document.getElementById('content');
+    <div class="notepad" id="content">내용을 불러오는 중...</div>
 
-  if (contentBox) {
-    // 전체 중앙 정렬
-    contentBox.style.textAlign = 'center';
-    // 줄 간격이 좁다면 아래 코드로 조절 가능합니다.
-    contentBox.style.lineHeight = '1.6'; 
+    <script>
+        // text.txt 파일을 읽어와서 id="content"인 요소에 삽입
+        async function loadTextFile() {
+            try {
+                const response = await fetch('data.txt'); // 파일 경로 입력
+                const text = await response.text();
+                document.getElementById('content').textContent = text;
+            } catch (error) {
+                document.getElementById('content').textContent = "파일을 불러올 수 없습니다.";
+                console.error(error);
+            }
+        }
 
-    fetch(filePath)
-      .then(response => {
-        if (!response.ok) throw new Error('파일을 찾을 수 없습니다.');
-        return response.text();
-      })
-      .then(data => {
-        // [수정 포인트] 텍스트를 줄 단위로 쪼개서 각 줄을 <div>로 변환
-        const lines = data.split(/\r?\n/);
-        contentBox.innerHTML = lines
-          .map(line => `<div>${line}</div>`)
-          .join('');
-      })
-      .catch(error => {
-        contentBox.textContent = '오류: ' + error.message;
-      });
-  }
-</script>
+        loadTextFile();
+    </script>
 
 
 
