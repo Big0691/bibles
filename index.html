@@ -79,43 +79,32 @@
     <div id="content"></div>
   </div> <!-- container 끝 -->
 
-  <!-- ... 기존 코드들 ... -->
+<!-- 기존 .grid 바로 아래에 이걸로 교체 -->
 
 <div class="grid" id="grid"></div>
 
-<!-- notepad 영역 – 여기서부터 적용 -->
-<div class="notepad" id="content">
+<div id="content" contenteditable="true" style="min-height: 300px; padding: 16px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; word-break: keep-all; border: 1px solid #eee; background: #fff;">
     내용을 불러오는 중...
 </div>
 
-<div class="footer">
-    <button id="reset">초기화</button>
-    <div class="bible-version">
-        <select id="bibleVersion">
-            <!-- ... 기존 옵션들 ... -->
-        </select>
-    </div>
-</div>
+<!-- 기존 footer 등 나머지 그대로 -->
 
-<!-- 스크립트는 그대로 유지하거나 아래처럼 약간 개선 -->
 <script>
-    async function loadTextFile() {
-        try {
-            const response = await fetch('data.txt');
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-            const text = await response.text();
-            document.getElementById('content').textContent = text;
-        } catch (error) {
-            document.getElementById('content').textContent = 
-                "data.txt 파일을 불러올 수 없습니다.\n" + error.message;
-            console.error(error);
-        }
+// data.txt 불러오기 (간단 버전)
+async function loadTextFile() {
+    try {
+        const response = await fetch('data.txt');
+        if (!response.ok) throw new Error("파일 없음 또는 로드 실패");
+        const text = await response.text();
+        document.getElementById('content').textContent = text;
+    } catch (error) {
+        document.getElementById('content').textContent = 
+            "data.txt 불러오기 실패\n\n확인: 같은 폴더에 data.txt가 있는지 확인하세요.";
+        console.error(error);
     }
+}
 
-    // 페이지 로드 후 실행
-    window.addEventListener('load', loadTextFile);
+window.addEventListener('load', loadTextFile);
 </script>
 
 <!-- ... 나머지 모달, 검색 오버레이 등 기존 코드들 ... -->
