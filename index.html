@@ -79,27 +79,9 @@
     <div id="content"></div>
   </div> <!-- container 끝 -->
 
-<!-- 기존 .notepad 또는 #content 부분을 이걸로 완전히 교체 -->
-<div id="content" contenteditable="true" style="min-height: 220px; padding: 16px; font-size: 15px; line-height: 1.7; border: 1px solid #ddd; background: #fffef7; margin: 20px 0; white-space: pre-wrap;">
-    내용을 불러오는 중...
-</div>
 
-<script>
-async function loadTextFile() {
-    try {
-        const response = await fetch('data.txt');
-        if (!response.ok) throw new Error();
-        const text = await response.text();
-        document.getElementById('content').textContent = text;
-    } catch {
-        document.getElementById('content').textContent = "data.txt 로드 실패 (파일 확인)";
-    }
-}
-window.addEventListener('load', loadTextFile);
-</script>
+
   
-<!-- ... 나머지 모달, 검색 오버레이 등 기존 코드들 ... -->
-
   <!-- 읽기 모달 -->
   <div class="modal" id="modal">
     <div class="modal-content">
