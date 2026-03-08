@@ -79,34 +79,25 @@
     <div id="content"></div>
   </div> <!-- container 끝 -->
 
-<!-- 기존 .grid 바로 아래에 이걸로 교체 -->
-
-<div class="grid" id="grid"></div>
-
-<div id="content" contenteditable="true" style="min-height: 300px; padding: 16px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; word-break: keep-all; border: 1px solid #eee; background: #fff;">
+<!-- 기존 .notepad 또는 #content 부분을 이걸로 완전히 교체 -->
+<div id="content" contenteditable="true" style="min-height: 220px; padding: 16px; font-size: 15px; line-height: 1.7; border: 1px solid #ddd; background: #fffef7; margin: 20px 0; white-space: pre-wrap;">
     내용을 불러오는 중...
 </div>
 
-<!-- 기존 footer 등 나머지 그대로 -->
-
 <script>
-// data.txt 불러오기 (간단 버전)
 async function loadTextFile() {
     try {
         const response = await fetch('data.txt');
-        if (!response.ok) throw new Error("파일 없음 또는 로드 실패");
+        if (!response.ok) throw new Error();
         const text = await response.text();
         document.getElementById('content').textContent = text;
-    } catch (error) {
-        document.getElementById('content').textContent = 
-            "data.txt 불러오기 실패\n\n확인: 같은 폴더에 data.txt가 있는지 확인하세요.";
-        console.error(error);
+    } catch {
+        document.getElementById('content').textContent = "data.txt 로드 실패 (파일 확인)";
     }
 }
-
 window.addEventListener('load', loadTextFile);
 </script>
-
+  
 <!-- ... 나머지 모달, 검색 오버레이 등 기존 코드들 ... -->
 
   <!-- 읽기 모달 -->
