@@ -3,49 +3,54 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>1.jpg ~ 자동 불러오기 갤러리</title>
+  <title>이미지 자동 갤러리</title>
   <style>
     body {
       margin: 0;
-      padding: 20px;
+      padding: 0;
       background: #0d0d0d;
       color: #ddd;
       font-family: Arial, sans-serif;
     }
     header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #111;
+      padding: 15px;
       text-align: center;
-      margin: 30px 0;
+      border-bottom: 1px solid #333;
     }
     .back-btn {
-      padding: 12px 28px;
+      padding: 12px 30px;
       font-size: 1.1rem;
-      background: #1e88e5;
+      background: #0066cc;
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
       text-decoration: none;
       display: inline-block;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
     }
-    .back-btn:hover { background: #1565c0; }
-.gallery {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-}
-.gallery img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 10px;
-  box-shadow: 0 4px 18px rgba(0,0,0,0.7);
-  display: block;
-}
-    .gallery img.loaded {
-      opacity: 1;
+    .back-btn:hover {
+      background: #0055aa;
+    }
+    .gallery {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .gallery img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 10px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.7);
+      display: block;
     }
     #status {
       text-align: center;
@@ -57,36 +62,32 @@
 <body>
 
 <header>
-  <h1>앱 사용 메뉴얼</h1>
-  <a href="https://big0691.github.io/bibles/" class="back-btn">메인으로 돌아가기</a>
+  <a href="index.html" class="back-btn">← 메인으로 돌아가기</a>
 </header>
 
-<div id="status">이미지 로딩 중... (최대 200장까지 시도)</div>
+<div id="status">이미지 로딩 중...</div>
 
 <div class="gallery" id="gallery"></div>
 
 <script>
-// ---------------- 설정 ----------------
-const folder = "/";           // 폴더 경로 (같은 폴더면 "./images/" 또는 "images/")
-const extension = ".jpg";           // .jpg, .png, .webp 등
+const folder = "/";
+const extension = ".jpg";
 const startNumber = 1;
-const maxTry = 3;                 // 안전장치: 무한 루프 방지 (필요하면 늘리세요)
-const padLength = 0;                // 001.jpg 형식이면 3, 1.jpg면 0 또는 1
+const maxTry = 3;
+const padLength = 0;
 
-// 제로 패딩 함수 (필요 시)
 function pad(num, size) {
   if (size <= 0) return num;
   return ('000000000' + num).slice(-size);
 }
 
-// ---------------- 메인 로직 ----------------
 const gallery = document.getElementById('gallery');
 const status = document.getElementById('status');
 let loadedCount = 0;
 
 function tryLoadImage(num) {
   if (num > maxTry) {
-    finishLoading();
+    status.textContent = loadedCount === 0 ? "이미지를 찾을 수 없습니다." : `총 ${loadedCount}장 로드 완료`;
     return;
   }
 
@@ -97,44 +98,23 @@ function tryLoadImage(num) {
   img.alt = numStr + extension;
   img.loading = "lazy";
 
-  // 로드 성공 → 표시
   img.onload = () => {
-    img.classList.add('loaded');
     loadedCount++;
-    status.textContent = `${loadedCount}장 로드 완료 (최근: ${numStr})`;
-    tryLoadImage(num + 1);   // 다음 번호 시도
+    status.textContent = `${loadedCount}장 로드 완료`;
+    tryLoadImage(num + 1);
   };
 
-  // 로드 실패 → 다음 번호로 바로 진행 (이미지 숨김)
   img.onerror = () => {
-    img.remove();            // 실패한 img 요소 삭제
-    tryLoadImage(num + 1);   // 다음 시도
+    img.remove();
+    tryLoadImage(num + 1);
   };
 
   img.src = src;
   gallery.appendChild(img);
 }
 
-function finishLoading() {
-  if (loadedCount === 0) {
-    status.textContent = "이미지를 찾을 수 없습니다. (images/1.jpg ~ 확인해주세요)";
-  } else {
-    status.textContent = `총 ${loadedCount}장 로드 완료!`;
-  }
-}
-
-// 시작!
 tryLoadImage(startNumber);
 </script>
 
 </body>
-
 </html>
-
-
-
-
-
-
-
-
