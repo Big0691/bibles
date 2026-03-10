@@ -70,7 +70,7 @@
 const folder = "/";           // 폴더 경로 (같은 폴더면 "./images/" 또는 "images/")
 const extension = ".jpg";           // .jpg, .png, .webp 등
 const startNumber = 1;
-const maxTry = 200;                 // 안전장치: 무한 루프 방지 (필요하면 늘리세요)
+const maxTry = 3;                 // 안전장치: 무한 루프 방지 (필요하면 늘리세요)
 const padLength = 0;                // 001.jpg 형식이면 3, 1.jpg면 0 또는 1
 
 // 제로 패딩 함수 (필요 시)
@@ -130,6 +130,7 @@ tryLoadImage(startNumber);
 </body>
 
 </html>
+
 
 
 
