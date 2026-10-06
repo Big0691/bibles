@@ -8,6 +8,5 @@
     { "id": "kornkrvs", "label": "개역개정", "file": "kornkrvs.json" },
     { "id": "kornrsvs", "label": "새번역", "file": "kornrsvs.json" },
     { "id": "kortkvs", "label": "현대어", "file": "kortkvs.json" },
-    { "id": "bible_dictionary", "label": "성경 사전", "file": "bible_dictionary.json" }
   ]
 }
