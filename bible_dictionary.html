@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>성경 사전</title>
+  <meta name="description" content="성경 사전 검색 — 표제어·내용 검색, 가나다 찾아보기" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect fill='%232c4a44' width='32' height='32' rx='7'/%3E%3Cpath fill='%23f4f0e8' d='M8 8h7.4c1.7 0 2.7.8 2.7 2.2s-1 2.2-2.7 2.2H8zm8.2 5.2h7.4c1.7 0 2.7.8 2.7 2.2s-1 2.2-2.7 2.2h-7.4zM8 18.4h7.4c1.7 0 2.7.8 2.7 2.2s-1 2.2-2.7 2.2H8z'/%3E%3C/svg%3E" />
+  <style>
+    :root {
+      --bg: #f3eee4; --surface: #faf7f1; --ink: #1c1914; --muted: #6b6458;
+      --line: #d9d0c3; --accent: #2c4a44; --accent-fg: #f4f0e8; --mark: #e7dfc8;
+      --font-sans: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      --font-serif: "Noto Serif KR", "Batang", Georgia, serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-sans); }
+    .wrap { max-width: 920px; margin: 0 auto; padding: 0 16px; }
+    header { position: sticky; top: 0; z-index: 20; background: var(--bg); border-bottom: 1px solid var(--line); }
+    .head { display: flex; align-items: center; gap: 12px; padding: 14px 0 10px; flex-wrap: wrap; }
+    .kicker { margin: 0; font-size: 11px; letter-spacing: .14em; color: var(--muted); }
+    h1 { margin: 0; font-family: var(--font-serif); font-size: 22px; }
+    .spacer { flex: 1; }
+    .btn { display: inline-flex; align-items: center; height: 40px; padding: 0 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); font: 500 14px var(--font-sans); cursor: pointer; text-decoration: none; white-space: nowrap; }
+    .btn:hover { background: var(--mark); }
+    .btn.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+    .search { padding-bottom: 12px; }
+    .search-row { display: flex; gap: 8px; }
+    .search-row input { flex: 1; height: 42px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 0 12px; font: 500 15px var(--font-sans); color: var(--ink); }
+    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; padding: 8px 0 2px; align-items: center; }
+    .toolbar select, .toolbar label.chk { height: 34px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 0 8px; font: 600 13px var(--font-sans); color: var(--ink); display: inline-flex; align-items: center; gap: 4px; }
+    .toolbar label.chk { cursor: pointer; white-space: nowrap; }
+    .toolbar label.chk input { margin: 0; }
+    .idx { display: flex; gap: 4px; overflow-x: auto; padding: 10px 0; scrollbar-width: thin; }
+    .chip { height: 36px; min-width: 40px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font: 600 14px var(--font-sans); cursor: pointer; }
+    .chip[data-active="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+    main { padding: 18px 0 48px; }
+    .meta { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+    .entry { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
+    .entry h2 { margin: 0 0 6px; font-family: var(--font-serif); font-size: 18px; color: var(--accent); }
+    .entry p { margin: 0; font-size: 15.5px; line-height: 1.8; }
+    .entry p.collapsed { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .more { margin-top: 6px; border: 0; background: none; color: var(--accent); font: 600 13px var(--font-sans); cursor: pointer; padding: 0; }
+    mark { background: var(--mark); border-radius: 3px; padding: 0 1px; }
+    .catrow { display: flex; gap: 4px; overflow-x: auto; padding: 2px 0 10px; scrollbar-width: thin; }
+    .cat { display: inline-block; font-size: 11px; font-weight: 700; color: var(--accent); background: var(--mark); border-radius: 20px; padding: 2px 9px; margin-bottom: 6px; }
+    .empty { text-align: center; padding: 48px 20px; border: 1px dashed var(--line); border-radius: 16px; background: var(--surface); }
+    footer { border-top: 1px solid var(--line); padding: 12px; text-align: center; font-size: 12px; color: var(--muted); }
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="head">
+      <div>
+        <p class="kicker">BIBLE DICTIONARY</p>
+        <h1>성경 사전</h1>
+      </div>
+      <div class="spacer"></div>
+      <a class="btn" href="./index_bible.html">성경 뷰어로</a>
+      <a class="btn" href="./txt_to_json.html">TXT 변환기로</a>
+      <button class="btn" id="btn-file" type="button">사전 JSON 열기</button>
+      <input id="file" type="file" accept=".json,application/json" hidden />
+    </div>
+    <div class="search">
+      <div class="search-row">
+        <input id="q" type="search" placeholder="표제어·내용·초성·성경구절 검색 (예: 사랑, ㅅㄹ, 요 2:1, 사랑 -하나님)" autocomplete="off" />
+        <button class="btn primary" id="btn-search" type="button">검색</button>
+      </div>
+      <div class="toolbar">
+        <select id="scope" title="검색 범위">
+          <option value="all">전체</option>
+          <option value="head">표제어만</option>
+          <option value="desc">내용만</option>
+          <option value="verse">성경구절만</option>
+        </select>
+        <select id="method" title="검색 방식">
+          <option value="incl">포함</option>
+          <option value="prefix">앞부분 일치</option>
+          <option value="suffix">뒷부분 일치</option>
+          <option value="exact">정확히 일치</option>
+          <option value="chosung">초성 검색</option>
+        </select>
+        <select id="match" title="여러 단어 조합">
+          <option value="and">단어 모두 포함</option>
+          <option value="or">단어 중 하나라도</option>
+        </select>
+        <select id="sort" title="정렬">
+          <option value="rel">관련도순</option>
+          <option value="alpha">가나다순</option>
+          <option value="short">짧은 표제어순</option>
+          <option value="long">설명 긴 순</option>
+        </select>
+        <select id="limit" title="결과 개수">
+          <option value="50">50개</option>
+          <option value="100" selected>100개</option>
+          <option value="200">200개</option>
+          <option value="500">500개</option>
+        </select>
+        <label class="chk"><input type="checkbox" id="nospace" checked /> 띄어쓰기 무시</label>
+      </div>
+    </div>
+  </div>
+</header>
+<main>
+  <div class="wrap">
+    <p class="meta" id="status">사전을 불러오는 중…</p>
+    <div class="catrow" id="catrow"></div>
+    <div class="idx" id="idx"></div>
+    <div id="list"></div>
+  </div>
+</main>
+<footer>bible_dictionary.json · 표제어 검색 전용 화면 (성경 본문은 성경 뷰어에서)</footer>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const CHO = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
+let ENTRIES = {}, ORDER = [], dictName = "성경 사전";
+let activeCho = "전체", activeCat = "전체", lastQuery = "";
+let CAT_OF = {}, CAT_COUNT = {};
+
+function esc(s){
+  return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+/*CAT-START*/
+const BOOK66 = ["창세기","출애굽기","레위기","민수기","신명기","여호수아","사사기","룻기","사무엘상","사무엘하","열왕기상","열왕기하","역대상","역대하","에스라","느헤미야","에스더","욥기","시편","잠언","전도서","아가","이사야","예레미야","예레미야애가","에스겔","다니엘","호세아","요엘","아모스","오바댜","요나","미가","나훔","하박국","스바냐","학개","스가랴","말라기","마태복음","마가복음","누가복음","요한복음","사도행전","로마서","고린도전서","고린도후서","갈라디아서","에베소서","빌립보서","골로새서","데살로니가전서","데살로니가후서","디모데전서","디모데후서","디도서","빌레몬서","히브리서","야고보서","베드로전서","베드로후서","요한일서","요한이서","요한삼서","유다서","요한계시록"];
+const CAT_ORDER = ["성경","인물","장소","동물","식물","자연","기타"];
+const CAT_LABEL = { 성경:"성경", 인물:"인물", 장소:"장소(지명·지역)", 동물:"동물", 식물:"식물(나무·꽃)", 자연:"자연", 기타:"기타" };
+const PLACE_SUF = ["산맥","봉우리","바다","호수","골짜기","계곡","협곡","광야","사막","성읍","마을","촌락","도시","나라","왕국","제국","지방","항구","동굴","무덤","성문","궁궐","성벽","시장","거리","광장","반도","폭포","온천","유적","나루","동리","고을","못","섬","강","산","탑","문","길","성","전","궁","터"];
+const PLACE_SUF_NOT = ["백성","민족","종족","완전","안전","이전","사도행전","기원전","기원후","서기전"];
+const ANIMAL_1 = ["새","양","소","말","개","뱀"];
+const ANIMAL_MULTI = ["짐승", "들짐승", "가축", "물고기", "염소", "산양", "면양", "들소", "물소", "야크", "망아지", "낙타", "당나귀", "노새", "곰", "늑대", "표범", "호랑이", "독수리", "솔개", "부엉이", "올빼미", "까마귀", "까치", "비둘기", "참새", "제비", "황새", "왜가리", "기러기", "오리", "닭", "병아리", "꿩", "타조", "공작", "펠리컨", "갈매기", "가마우지", "메추라기", "박쥐", "두더지", "토끼", "사슴", "노루", "영양", "멧돼지", "돼지", "강아지", "고양이", "생쥐", "족제비", "오소리", "수달", "원숭이", "코끼리", "도마뱀", "개구리", "두꺼비", "메뚜기", "황충", "여치", "귀뚜라미", "꿀벌", "개미", "흰개미", "벼룩", "나방", "굼벵이", "지렁이", "달팽이", "조개", "새우", "고래", "상어", "문어", "오징어", "미꾸라지", "뱀장어", "장어", "숭어", "잉어", "붕어", "메기", "가물치", "송어", "연어", "대구", "명태", "멸치", "정어리", "청어", "고등어", "꽁치", "삼치", "도미", "농어", "우럭", "광어", "도다리", "가자미", "넙치", "민어", "조기", "전갈", "지네", "고슴도치", "다람쥐", "비버", "너구리", "삵", "순록", "하이에나", "재칼", "기린", "얼룩말", "캥거루", "코알라", "판다", "해달", "물개", "돌고래", "거북", "놋뱀", "불뱀", "구리뱀", "살모사", "구렁이", "코브라", "방울뱀", "비단뱀", "파충류", "포유류", "조류", "곤충", "갑각류", "연체동물", "양서류", "송아지", "어린양", "새끼양", "뿔"];
+const ANIMAL_EXACT = ["수리", "매", "사자", "벌", "파리", "모기", "하마", "여우", "독사", "자라", "곰", "게", "이", "가오리", "쥐가오리", "제비", "거미"];
+const PLANT_1 = ["꽃","풀","밀","콩","팥","삼","마","배","감","밤","무"];
+const PLANT_MULTI = ["나무", "수목", "화초", "잡초", "곡식", "곡물", "과실", "포도", "무화과", "종려", "대추야자", "감람", "올리브", "보리", "귀리", "녹두", "목화", "백합", "장미", "수선화", "민들레", "쑥", "독말풀", "맨드레이크", "몰약", "유향", "향료", "향품", "약초", "채소", "나물", "버섯", "이끼", "해초", "미역", "다시마", "연밥", "연꽃", "골풀", "띠풀", "억새", "기장", "율무", "메밀", "들깨", "참깨", "호박", "오이", "수박", "멜론", "딸기", "앵두", "자두", "살구", "복숭아", "사과", "호두", "은행", "석류", "레몬", "오렌지", "바나나", "파인애플", "망고", "야자", "백향목", "향백나무", "잣나무", "전나무", "소나무", "상수리나무", "떡갈나무", "느티나무", "버드나무", "뽕나무", "오동나무", "회양목", "측백나무", "주목", "비자나무", "구상나무", "매화", "벚꽃", "개나리", "진달래", "철쭉", "국화", "해바라기", "튤립", "카네이션", "작약", "모란", "동백", "은방울꽃", "히아신스", "크로커스", "아마릴리스", "참나리", "솔나리", "라일락", "아이리스", "글라디올러스", "프리지아", "스타티스", "안개꽃", "할미꽃", "제비꽃", "팬지", "데이지", "금잔화", "백일홍", "채송화", "봉선화", "나팔꽃", "달맞이꽃", "맨드라미", "겨자", "고추", "마늘", "양파", "부추", "시금치", "상추", "배추", "당근", "감자", "고구마", "토란", "연근", "우엉", "도라지", "더덕", "취나물", "고사리", "미나리", "쑥갓", "냉이", "달래", "씀바귀", "질경이", "인삼", "홍삼", "산삼", "칡", "당귀", "천궁", "황기", "오미자", "구기자", "산수유", "복분자", "차나무", "면화", "코코야자", "사과나무", "배나무", "살구나무", "자두나무", "앵두나무", "호두나무", "밤나무", "감나무", "무화과나무", "감람나무", "포도나무", "석류나무", "겨자씨", "삼베"];
+const PLANT_EXACT = ["갈대", "오디", "아마", "나리", "달리아", "수수", "모시", "레몬", "치자", "오디", "기장", "부들", "보리"];
+const NATURE_1 = ["해","달","불","물","비","눈","돌","금","은","별","밤","낮","봄","여름","가을","겨울","아침","저녁","새벽","정오","흙"];
+const NATURE_MULTI = ["하늘","천체","항성","행성","혜성","유성","일식","월식","태양","장마","소나기","함박눈","구름","천둥","번개","우레","화산","용암","화염","강물","바닷물","샘물","대지","황토","자갈","금강석","다이아몬드","마노","비취","수정","자수정","황옥","놋쇠","청동","광물","광석","대리석","화강암","석회암","사암","현무암","범람","계절","황혼","여명","일출","일몰","월출","그믐","보름","상현","하현","초승달","반달","간조","만조","물결","소용돌이","회오리","폭풍","광풍","폭우","호우","이슬비","보슬비","가랑비","장대비","해돋이","해넘이","새벽별","개밥바라기","북극성","은하수","유성우","소행성","운석","달무리","햇무리","쌍무지개","노을","석양","눈보라","폭설","눈사태","산사태","침수","메마름","건조","습기","한파","폭염","열대야","적도","회귀선","남극","북극","극광","오로라","홍수"];
+const NATURE_EXACT = ["기온", "소금", "진주", "보석", "유황", "먼지", "티끌", "모래", "바람", "안개", "이슬", "서리", "우박", "파도", "구름", "마노"];
+const PERSON_SUF = ["여왕","선지자","선견자","제사장","대제사장","전도자","장로","집사","감독","선교사","총독","방백","재판관","사사","족장","서기관","바리새인","사두개인","레위인","나실인"];
+const PERSON_SUF_LAST = ["왕","사도"];
+const PERSON_SUF_NOT = ["그리스도","기도","디도","사도행전","여호와","하나님"];
+const PLACE_STRONG_RE = /(성읍이다|마을이다|도시이다|나라이다|왕국이다|제국이다|지방이다|지역이다|고장이다|영토이다|에 위치한|에 있는|에 자리한|에 세워진|수도[^원]|항구|성읍|마을|도시|나라|왕국|제국|지방|지역|고장|영토|근처|인근|부근|인접|에 있다|에 있었다|에 속한|킬로미터|Km|km|마일|지리적|고도로|에 세운|에 건설된|골짜기|계곡|강변|강가|호숫가|바닷가|동네|고을|유적지|유적|고고학|발굴)/;
+const PLACE_WEAK_RE = /(북부|남부|동부|서부|중부|북쪽|남쪽|동쪽|서쪽|동편|서편|남편|북편|북서|남서|북동|남동|동남|서남|동서|남북|사방|일대|전역|각지|도처|이곳|그곳|현지|출생지|탄생지|고향|발상지|현재|옛 이름|구명|별칭|별명|이칭|일컬|호칭|곳|터이다|터로|터에|터에서|텔 |텔\(|동서|남북)/;
+const PERSON_ID_RE = /(의 아들|의 딸|의 아내|의 남편|의 형제|의 자매|의 아버지|의 어머니|의 손자|의 조카|의 후손|의 자손|맏아들|막내아들|큰아들|작은아들|맏딸|큰딸|막내|첫째|둘째|셋째|넷째|다섯째|여섯째|일곱째|세 아들|두 아들|아들 중|딸 중|대 왕|의 왕[.]|왕이다|여왕이다|선지자이다|제사장이다|사도이다|장로이다|집사이다|사람이다|인물이다|이름이다|이름이며|라 하는 사람|라는 사람|한 사람[.]|한사람|사람 \(|사람 \(|외조모|외조부|조모|조부|외삼촌|삼촌|고모|이모|장인|장모|사위|며느리|손녀|조카|외숙|숙부|부친|친부|생부|양부|모친|생모|양모|유모|시녀|궁녀|내시|하인|과부|고아|미망인|홀어미|홀아비|상인|장사꾼|장사치|저자|의사|의원|동역자|제자|신자|여신자|성도|교인|일꾼|사촌|친척|조상|선조|후예|후손|자손|본명|개명|유대인[^의]|헬라인|로마인|이방인[^의]|나그네|출생한|태어난|결혼한|장가든|시집간|통치한|통치하던|다스린|다스리던|재위한|재위하던|즉위한|즉위하여|전사한|병사한|묻힌|장사된|기록한|기록된|저술한|순교한|순교자|성인|성자|위대한|유명한|택하신|부르신|보내신|파송된|임명된|세우신|주인공|만드는 사람|만들어 내는 사람|된 사람[.]|인 사람[.]|은 사람[.]|는 사람[.]|열심당|셀롯|회당장|지도자|영도자|통치자|입법자|건국자|해방자|처형된|처형당한|참수된|독살된|암살된|왕의 (칭호|호칭|이름|직함|직위|별명|별칭)|왕에 대한 (칭호|호칭))/;
+const PERSON_ROLE_RE = /(선지자|선견자|제사장|사도(?!행전)|장로|집사|감독|선교사|총독|방백|재판관|사사|서기관|바리새인|사두개인|레위인|나실인|장군|대장[^간]|백부장|천부장|장관|대신[^하]|신하로|신하가|신하들|모사|목자|양치기|어부|농부|목수|석수|대장장이|도공|옹기장이|병사|군인|왕은|왕이란|왕으로서|왕자|왕비|왕후|왕모|용사|맹장|호걸|무사|투사|장수[^가-힣])/;
+const GOD_RE = /(우상|신상|신화|신전|신당|의 신([^가-힣]|$)|신의 우두머리|여신|남신)/;
+const GOD_PLACE_OK = /(성읍|마을|도시|에 위치한|근처|에 있다|수도[^원]|항구)/;
+const COIN_RE = /(은화|동화|금화|화폐|통화|주화|달란트|세겔|미나|렙돈|게라|베가|고드란트|스타데르|데나리온|드라크마|앗사리온|스다디온)/;
+const OBJECT_SUF = ["두멍","그릇","기명","장막","천막","초막","오두막","헛간","외양간","마구간","용광로","풀무","분향단","번제단","물두멍","횃불","모닥불","굴뚝","들보","서까래","주춧돌","모퉁잇돌","문지방","문설주","창살","발코니","난간","계단","사다리","다락","뒤간","울타리","담장","단지","항아리","상자","주머니","전대","지갑","허리띠","신발","구두","짚신","나막신","버선","모자","두건","너울","두루마기","마고자","조끼","바지","치마","저고리","내의","속옷","겉옷","외투","망토","담요","이불","베개","방석","돗자리","멍석","가마니","뚜껑","마개","손잡이","고리","걸쇠","거울","빗","가위","골무","저울","그물","바늘","사슬","자물쇠","열쇠","빗장","망치","톱","지팡이","막대기","채찍","갑옷","투구","방패","의자","탁자","침대","등잔","촛대","등대","화로","절구","맷돌","광주리","바구니","삼태기","낚시","밧줄","칼","활","막","궤"];
+const ANIMAL_DESC = ["낙타","당나귀","노새","하마","코끼리","고래","상어","문어","개미","말벌","메뚜기","황충","박쥐","타조","공작","펠리컨","갈매기","기러기","왜가리","족제비","오소리","수달","원숭이","고슴도치","다람쥐","지네","달팽이","지렁이","미꾸라지","뱀장어","숭어","잉어","붕어","메기","송어","연어","대구","명태","멸치","정어리","고등어","꽁치","삼치","도미","농어","광어","가자미","넙치","민어","조기","독수리","비둘기","까마귀","까치","참새","황새","올빼미","부엉이","솔개","가마우지","메추라기","두더지","토끼","사슴","노루","영양","멧돼지","고양이","늑대","표범","호랑이","담비","너구리","삵","순록","물소","야크","산양","하이에나","재칼","기린","얼룩말","캥거루","코알라","판다","해달","물개","돌고래","거북","놋뱀","불뱀","비단뱀","방울뱀","파충류","포유류","조류","곤충","갑각류","연체동물","양서류"];
+const PLANT_DESC = ["무화과", "백향목", "감람나무", "종려나무", "포도나무", "대추야자", "향백나무", "잣나무", "전나무", "소나무", "상수리나무", "떡갈나무", "느티나무", "버드나무", "뽕나무", "오동나무", "회양목", "측백나무", "비자나무", "구상나무", "매화", "벚꽃", "개나리", "진달래", "철쭉", "해바라기", "튤립", "카네이션", "작약", "모란", "동백", "은방울꽃", "히아신스", "크로커스", "아마릴리스", "참나리", "라일락", "아이리스", "글라디올러스", "프리지아", "스타티스", "안개꽃", "할미꽃", "제비꽃", "팬지", "데이지", "금잔화", "백일홍", "채송화", "봉선화", "나팔꽃", "달맞이꽃", "맨드라미", "겨자씨", "들깨", "참깨", "메밀", "율무", "수수", "고들빼기", "엉겅퀴", "가시덤불", "가시나무", "찔레", "으름", "다래", "머루", "뽕잎", "누에고치", "삼베"];
+const NATURE_DESC = ["천둥","번개","화산","용암","무지개","가뭄","폭풍","해일","일식","월식","혜성","유성","은하수","운석","극광","오로라","간조","만조","소용돌이","회오리","폭우","장대비","눈보라","폭설","눈사태","산사태"];
+function byLenDesc(a, b){ return b.length - a.length; }
+function headHit(h, multi, exact1, exactOnly){
+  const set = new Set(exactOnly);
+  const all = [...new Set([...multi, ...exactOnly, ...exact1])].sort(byLenDesc);
+  for (const w of all) {
+    if (set.has(w) || w.length <= 1) { if (h === w) return w; continue; }
+    if (h.includes(w)) return w;
+  }
+  return "";
+}
+function descHit(t, words){
+  t = t.slice(0, 100);
+  for (const w of [...words].sort(byLenDesc)) if (t.includes(w)) return w;
+  return "";
+}
+function sufHit(h, sufs, not){
+  for (const s of [...sufs].sort(byLenDesc)) {
+    if (h.length > s.length && h.endsWith(s)) {
+      if (not && not.some(n => h.endsWith(n))) continue;
+      return s;
+    }
+  }
+  return "";
+}
+function stripBookSuffix(h){
+  if (/서$/.test(h) && BOOK66.includes(h.slice(0, -1))) return h.slice(0, -1);
+  if (/기$/.test(h) && BOOK66.includes(h.slice(0, -1))) return h.slice(0, -1);
+  return "";
+}
+function classifyEntry(h, t){
+  t = String(t ?? "");
+  const head80 = t.slice(0, 80);
+  if (BOOK66.includes(h) || stripBookSuffix(h)) return { cat: "성경", term: h };
+  const ps = sufHit(h, PLACE_SUF, PLACE_SUF_NOT);
+  if (ps) {
+    if (PERSON_ID_RE.test(head80) && !PLACE_STRONG_RE.test(head80)) return { cat: "인물", term: "설명" };
+    return { cat: "장소", term: ps };
+  }
+  let w = headHit(h, ANIMAL_MULTI, ANIMAL_1, ANIMAL_EXACT);
+  if (w) return { cat: "동물", term: w };
+  w = headHit(h, PLANT_MULTI, PLANT_1, PLANT_EXACT);
+  if (w) return { cat: "식물", term: w };
+  w = headHit(h, NATURE_MULTI, NATURE_1, NATURE_EXACT);
+  if (w) return { cat: "자연", term: w };
+  const rs = sufHit(h, PERSON_SUF, []);
+  if (rs) return { cat: "인물", term: rs };
+  for (const s of PERSON_SUF_LAST) {
+    if (h.length >= s.length && h.endsWith(s) && !PERSON_SUF_NOT.some(n => h.endsWith(n))) return { cat: "인물", term: s };
+  }
+  if (GOD_RE.test(head80) && !GOD_PLACE_OK.test(head80)) return { cat: "기타", term: "신" };
+  if (PERSON_ID_RE.test(head80)) return { cat: "인물", term: "설명" };
+  if (/(직명|직분|관직|벼슬)/.test(head80)) return { cat: "기타", term: "제도" };
+  if (sufHit(h, OBJECT_SUF, []) || COIN_RE.test(head80)) return { cat: "기타", term: "사물" };
+  if (PLACE_STRONG_RE.test(head80)) {
+    const _pm = PLACE_STRONG_RE.exec(head80)[0];
+    if (/^(마을|촌락|동리|고을|동네)$/.test(_pm) && /(출신|태생|태어난|살던|거주)/.test(head80)) { /* 인물 출신지 표기: 통과 */ }
+    else return { cat: "장소", term: "설명" };
+  }
+  if (PLACE_WEAK_RE.test(head80)) return { cat: "장소", term: "설명" };
+  if (PERSON_ROLE_RE.test(head80)) return { cat: "인물", term: "설명" };
+  w = descHit(t, ANIMAL_DESC);
+  if (w) return { cat: "동물", term: w };
+  w = descHit(t, PLANT_DESC);
+  if (w) return { cat: "식물", term: w };
+  w = descHit(t, NATURE_DESC);
+  if (w) return { cat: "자연", term: w };
+  return { cat: "기타", term: "" };
+}
+
+/*CAT-END*/
+function choseong(ch){
+  const code = ch.charCodeAt(0);
+  if (code >= 0xAC00 && code <= 0xD7A3) return CHO[Math.floor((code - 0xAC00) / 588)];
+  if (/[a-zA-Z]/.test(ch)) return "A-Z";
+  if (/[0-9]/.test(ch)) return "0-9";
+  return "기타";
+}
+function setData(name, entries){
+  dictName = name || "성경 사전";
+  ENTRIES = entries; ORDER = Object.keys(entries);
+  CAT_OF = {}; CAT_COUNT = {};
+  for (const h of ORDER) {
+    const c = classifyEntry(h, entries[h]).cat;
+    CAT_OF[h] = c; CAT_COUNT[c] = (CAT_COUNT[c] || 0) + 1;
+  }
+  activeCho = "전체"; activeCat = "전체"; lastQuery = ""; $("q").value = "";
+  buildCats(); buildIndex(); render();
+  $("status").textContent = `${dictName} · ${ORDER.length}개 항목`;
+}
+function buildCats(){
+  const keys = ["전체", ...CAT_ORDER.filter(c => CAT_COUNT[c])];
+  $("catrow").innerHTML = keys.map(k =>
+    `<button class="chip" type="button" data-cat="${esc(k)}" data-active="${k===activeCat}">${k==="전체"?"전체":esc(CAT_LABEL[k]||k)} · ${k==="전체"?ORDER.length:CAT_COUNT[k]}</button>`
+  ).join("");
+}
+function passCat(h){ return activeCat === "전체" || CAT_OF[h] === activeCat; }
+function buildIndex(){
+  const counts = {};
+  for (const h of ORDER) {
+    if (!h) continue;
+    const c = choseong(h[0]);
+    counts[c] = (counts[c] || 0) + 1;
+  }
+  const keys = ["전체", ...CHO.filter(c => counts[c]), ...["A-Z","0-9","기타"].filter(c => counts[c])];
+  $("idx").innerHTML = keys.map(k =>
+    `<button class="chip" type="button" data-cho="${esc(k)}" data-active="${k===activeCho}">${esc(k)}${k==="전체"?" · "+ORDER.length:""}</button>`
+  ).join("");
+}
+function choStr(s){
+  let r = "";
+  for (const ch of String(s)) {
+    const code = ch.charCodeAt(0);
+    if (code >= 0xAC00 && code <= 0xD7A3) r += CHO[Math.floor((code - 0xAC00) / 588)];
+    else if (/[ㄱ-ㅎ]/.test(ch)) r += ch;
+    else r += ch;
+  }
+  return r;
+}
+function normBase(s, nospace){
+  s = String(s ?? "").toLowerCase();
+  if (nospace) s = s.replace(/[\s\u3000]+/g, "");
+  return s;
+}
+function normVerse(s){ return String(s ?? "").toLowerCase().replace(/：/g, ":").replace(/[\s\u3000]+/g, "").replace(/\s*:\s*/g, ":"); }
+function extractVerses(t){
+  const m = String(t ?? "").match(/[가-힣a-zA-Z]{1,6}\s?\d+\s*:\s*\d+(\s*-\s*\d+)?/g);
+  return m ? m.map(normVerse) : [];
+}
+function parseTokens(q){
+  const pos = [], neg = [];
+  const re = /"([^"]+)"|(\S+)/g;
+  let m;
+  while ((m = re.exec(q))) {
+    let tok = m[1] ?? m[2];
+    if (!tok) continue;
+    if (tok.startsWith("-") && tok.length > 1) neg.push(tok.slice(1));
+    else pos.push(tok);
+  }
+  return { pos, neg };
+}
+function matchOne(hay, needle, method, nospace){
+  if (!needle) return true;
+  if (method === "chosung") {
+    const hc = choStr(hay);
+    const nc = choStr(needle);
+    const nChoOnly = nc.replace(/[^ㄱ-ㅎ]/g, "") || nc;
+    return hc.includes(nChoOnly);
+  }
+  const h = normBase(hay, nospace), n = normBase(needle, nospace);
+  if (method === "exact") return h === n;
+  if (method === "prefix") return h.startsWith(n);
+  if (method === "suffix") return h.endsWith(n);
+  return h.includes(n);
+}
+function matchField(h, t, needle, scope, method, nospace){
+  if (scope === "head") return matchOne(h, needle, method, nospace);
+  if (scope === "desc") return matchOne(t, needle, method, nospace);
+  if (scope === "verse") {
+    const refs = extractVerses(t);
+    if (!refs.length) return false;
+    const n = normVerse(needle);
+    if (method === "exact") return refs.some(r => r === n);
+    if (method === "prefix") return refs.some(r => r.startsWith(n));
+    if (method === "suffix") return refs.some(r => r.endsWith(n));
+    if (method === "chosung") return false;
+    return refs.some(r => r.includes(n));
+  }
+  return matchOne(h, needle, method, nospace) || matchOne(t, needle, method, nospace);
+}
+function hiMulti(text, tokens){
+  text = esc(text);
+  const uniq = [...new Set(tokens.filter(Boolean))].sort((a, b) => b.length - a.length);
+  for (const tok of uniq) {
+    const qesc = esc(tok).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (!qesc) continue;
+    try { text = text.replace(new RegExp(qesc, "gi"), m => `<mark>${m}</mark>`); } catch {}
+  }
+  return text;
+}
+function entryHtml(h, tokens, collapsed){
+  const t = ENTRIES[h] ?? "";
+  const long = t.length > 220;
+  const c = CAT_OF[h] || "기타";
+  const verses = extractVerses(t).length ? `<div style="font-size:12px;color:var(--muted)">구절 ${extractVerses(t).slice(0, 3).join(" · ")}</div>` : "";
+  return `<article class="entry"><span class="cat">${esc(CAT_LABEL[c] || c)}</span><h2>${hiMulti(h, tokens)}</h2>` +
+    `${verses}<p class="${collapsed && long ? "collapsed" : ""}">${hiMulti(t, tokens)}</p>` +
+    (long ? `<button class="more" type="button">더 보기</button>` : "") +
+    `</article>`;
+}
+function render(){
+  const box = $("list");
+  if (!ORDER.length) {
+    box.innerHTML = `<div class="empty"><h2>사전 파일이 없습니다</h2><p>bible_dictionary.json을 이 HTML과 같은 폴더에 두거나 [사전 JSON 열기]로 열어 주세요.</p></div>`;
+    return;
+  }
+  if (lastQuery) { renderSearch(); return; }
+  let keys = ORDER.filter(passCat);
+  if (activeCho !== "전체") keys = keys.filter(h => h && choseong(h[0]) === activeCho);
+  const N = Math.min(keys.length, 60);
+  let html = keys.slice(0, N).map(h => entryHtml(h, [], true)).join("");
+  if (keys.length > N) html += `<div class="empty"><p>외 ${keys.length - N}개 항목 — 위 검색창이나 자음 탭을 이용하세요.</p></div>`;
+  box.innerHTML = html || `<div class="empty"><p>해당 자음의 표제어가 없습니다.</p></div>`;
+}
+function renderSearch(){
+  const scope = $("scope").value, method = $("method").value;
+  const mode = $("match").value, sort = $("sort").value;
+  const lim = parseInt($("limit").value, 10) || 100;
+  const nospace = $("nospace").checked;
+  const { pos, neg } = parseTokens(lastQuery);
+  const headHits = []; let scanned = 0;
+  for (const h of ORDER) {
+    if (!passCat(h)) continue;
+    if (activeCho !== "전체" && choseong(h[0] || "") !== activeCho) continue;
+    const t = String(ENTRIES[h] ?? "");
+    if (neg.some(n => matchField(h, t, n, scope, method === "chosung" ? "incl" : method, nospace))) continue;
+    let ok;
+    if (!pos.length) ok = true;
+    else if (mode === "or") ok = pos.some(p => matchField(h, t, p, scope, method, nospace));
+    else ok = pos.every(p => matchField(h, t, p, scope, method, nospace));
+    if (!ok) continue;
+    const isHead = pos.length ? pos.some(p => matchOne(h, p, method, nospace)) : true;
+    headHits.push({ h, t, isHead });
+    scanned++;
+    if (headHits.length >= lim) break;
+  }
+  let keys = headHits;
+  if (sort === "alpha") keys.sort((a, b) => a.h.localeCompare(b.h, "ko"));
+  else if (sort === "short") keys.sort((a, b) => a.h.length - b.h.length || a.h.localeCompare(b.h, "ko"));
+  else if (sort === "long") keys.sort((a, b) => b.t.length - a.t.length);
+  else keys.sort((a, b) => (b.isHead - a.isHead) || (a.h.length - b.h.length));
+  const nHead = keys.filter(k => k.isHead).length;
+  const scopeName = { all: "전체", head: "표제어", desc: "내용", verse: "성경구절" }[scope];
+  const methodName = { incl: "포함", prefix: "앞부분", suffix: "뒷부분", exact: "정확히", chosung: "초성" }[method];
+  $("status").textContent = `${dictName} · "${lastQuery}" ${keys.length}개 (표제어 ${nHead} + 내용 ${keys.length - nHead}) · ${scopeName}/${methodName}/${mode === "and" ? "AND" : "OR"}`;
+  $("list").innerHTML = keys.length
+    ? keys.map(k => entryHtml(k.h, pos, true)).join("")
+    : `<div class="empty"><p>검색 결과가 없습니다.</p><p style="font-size:13px">예) 사랑 · ㅅㄹ(초성) · 요 2:1(구절) · 사랑 -하나님(제외) · "혼인 잔치"(정확구)</p></div>`;
+}
+function doSearch(q){
+  lastQuery = (q || "").trim();
+  if (!lastQuery) {
+    const keys = ORDER.filter(passCat);
+    $("status").textContent = `${dictName} · ${keys.length}개 항목`;
+    render(); return;
+  }
+  renderSearch();
+}
+
+$("idx").onclick = e => {
+  const b = e.target.closest("[data-cho]"); if (!b) return;
+  activeCho = b.dataset.cho; lastQuery = ""; $("q").value = "";
+  buildIndex(); render();
+};
+$("catrow").onclick = e => {
+  const b = e.target.closest("[data-cat]"); if (!b) return;
+  activeCat = b.dataset.cat; lastQuery = ""; $("q").value = "";
+  buildCats(); render();
+};
+$("list").onclick = e => {
+  const b = e.target.closest(".more"); if (!b) return;
+  const p = b.previousElementSibling;
+  const collapsed = p.classList.toggle("collapsed");
+  b.textContent = collapsed ? "더 보기" : "접기";
+};
+let tmr = null;
+$("q").oninput = e => { clearTimeout(tmr); tmr = setTimeout(() => doSearch(e.target.value), 200); };
+$("q").onkeydown = e => { if (e.key === "Enter") { e.preventDefault(); doSearch(e.target.value); } };
+$("btn-search").onclick = () => doSearch($("q").value);
+for (const id of ["scope", "method", "match", "sort", "limit", "nospace"]) {
+  $(id).onchange = () => { if (lastQuery) renderSearch(); };
+}
+
+function normalize(raw){
+  if (!raw || typeof raw !== "object") return null;
+  if (raw.entries && typeof raw.entries === "object" && Object.keys(raw.entries).length) {
+    const flat = {};
+    for (const [h, v] of Object.entries(raw.entries)) flat[String(h)] = Array.isArray(v) ? v.join(" ") : String(v ?? "");
+    return { name: (typeof raw.dictionary === "string" && raw.dictionary.trim()) || "성경 사전", entries: flat };
+  }
+  return null;
+}
+function loadScript(src){
+  return new Promise((res, rej) => {
+    const s = document.createElement("script");
+    s.src = src; s.async = true;
+    s.onload = () => res(true); s.onerror = () => rej(new Error(src));
+    document.head.appendChild(s);
+  });
+}
+async function fetchJson(url){
+  const res = await fetch(url, { cache: "default" });
+  if (!res.ok) throw new Error(url);
+  const t = (await res.text()).trim();
+  if (!t || t[0] === "<") throw new Error(url);
+  return JSON.parse(t);
+}
+async function autoLoad(){
+  const params = new URLSearchParams(location.search);
+  const files = [params.get("file"), "./bible_dictionary.json", "./bibles/bible_dictionary.json"].filter(Boolean);
+  for (const u of files) {
+    try { const d = normalize(await fetchJson(u)); if (d) { setData(d.name, d.entries); return true; } } catch {}
+  }
+  for (const u of ["./bible_dictionary.js", "./bibles/bible_dictionary.js"]) {
+    try {
+      await loadScript(u);
+      const raw = window.__BIBLE_DATA__ && window.__BIBLE_DATA__["bible_dictionary"];
+      const d = normalize(raw);
+      if (d) { setData(d.name, d.entries); return true; }
+    } catch {}
+  }
+  return false;
+}
+$("btn-file").onclick = () => $("file").click();
+$("file").onchange = async e => {
+  const f = e.target.files && e.target.files[0];
+  e.target.value = "";
+  if (!f) return;
+  try {
+    const d = normalize(JSON.parse(await f.text()));
+    if (!d) throw new Error("entries 없음");
+    setData(d.name, d.entries);
+  } catch (err) {
+    $("status").textContent = "사전 JSON을 읽지 못했습니다: " + (err && err.message);
+  }
+};
+
+(async function init(){
+  const ok = await autoLoad().catch(() => false);
+  if (!ok) {
+    $("status").textContent = "사전 파일을 찾지 못했습니다. bible_dictionary.json을 같은 폴더에 두거나 [사전 JSON 열기]를 사용하세요.";
+    render();
+  }
+  const q = new URLSearchParams(location.search).get("q");
+  if (q && ORDER.length) { $("q").value = q; doSearch(q); }
+})();
+</script>
+</body>
+</html>
