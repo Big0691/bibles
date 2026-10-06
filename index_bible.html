@@ -262,25 +262,26 @@
       </div>
     </div>
   </main>
-  <footer id="status">같은 폴더의 JSON을 자동으로 찾습니다. GitHub Pages에서는 bibles.json이 필요합니다. PC에서 파일로 연 경우에는 [폴더에서 모두 열기]를 사용하세요. 데이터 JSON은 포함되어 있지 않습니다.</footer>
+  <footer id="status">bibless.json 목록에 등록된 JSON만 자동으로 불러옵니다. PC에서 파일로 연 경우에는 [폴더에서 모두 열기]를 사용하세요. 데이터 JSON은 포함되어 있지 않습니다.</footer>
   <div class="drop" id="drop"><div class="drop-card"><h2>JSON 파일을 여기에 놓으세요</h2><p style="color:var(--muted);margin:8px 0 0">폴더를 통째로 놓으면 안의 JSON을 모두 불러옵니다</p></div></div>
 
 <script>
 const TRANSLATIONS = [
-  { id: "kordob", label: "우리말성경", files: ["kordob.json"] },
-  { id: "koreasy", label: "쉬운성경", files: ["koreasy.json"] },
-  { id: "korhkjv", label: "흠정역", files: ["Korhkjv.json", "korhkjv.json"] },
-  { id: "korhrv", label: "개역한글", files: ["Korhrv.json", "korhrv.json"] },
-  { id: "korklb", label: "현대인", files: ["korklb.json"] },
-  { id: "kornkrv", label: "개역개정", files: ["kornkrv.json", "kornkrvs.json"] },
-  { id: "kornrsv", label: "새번역", files: ["kornrsv.json"] },
-  { id: "kortkv", label: "현대어", files: ["kortkv.json"] },
+  { id: "kordobs", label: "우리말성경", files: ["kordobs.json"] },
+  { id: "koreasys", label: "쉬운성경", files: ["koreasys.json"] },
+  { id: "korhkjvs", label: "흠정역", files: ["korhkjvs.json"] },
+  { id: "korhrvs", label: "개역한글", files: ["Korhrvs.json"] },
+  { id: "korklbs", label: "현대인", files: ["korklbs.json"] },
+  { id: "kornkrvs", label: "개역개정", files: ["kornkrvs.json"] },
+  { id: "kornrsvs", label: "새번역", files: ["kornrsvs.json"] },
+  { id: "kortkvs", label: "현대어", files: ["kortkvs.json"] },
 ];
 const ABBR = {"창세기":"창","출애굽기":"출","탈출기":"출","레위기":"레","민수기":"민","신명기":"신","여호수아":"수","사사기":"삿","판관기":"삿","룻기":"룻","사무엘상":"삼상","사무엘하":"삼하","열왕기상":"왕상","열왕기하":"왕하","역대상":"대상","역대하":"대하","에스라":"스","느헤미야":"느","에스더":"에","욥기":"욥","시편":"시","잠언":"잠","전도서":"전","아가":"아","이사야":"사","예레미야":"렘","예레미야애가":"애","에스겔":"겔","다니엘":"단","호세아":"호","요엘":"욜","아모스":"암","오바댜":"옵","요나":"욘","미가":"미","나훔":"나","하박국":"합","스바냐":"습","학개":"학","스가랴":"슥","말라기":"말","마태복음":"마","마가복음":"막","누가복음":"눅","요한복음":"요","사도행전":"행","로마서":"롬","고린도전서":"고전","고린도후서":"고후","갈라디아서":"갈","에베소서":"엡","빌립보서":"빌","골로새서":"골","데살로니가전서":"살전","데살로니가후서":"살후","디모데전서":"딤전","디모데후서":"딤후","디도서":"딛","빌레몬서":"몬","히브리서":"히","야고보서":"약","베드로전서":"벧전","베드로후서":"벧후","요한일서":"요일","요한이서":"요이","요한삼서":"요삼","유다서":"유","요한계시록":"계"};
 const ORDER = Object.keys(ABBR);
 const DISCOVER_DIRS = ["./", "./bibles/"];
-const INDEX_FILES = ["bibles.json","index.json","bible-index.json","files.json"];
+const INDEX_FILES = ["bibless.json","bibles.json","index.json","bible-index.json","files.json"];
 const INDEX_BASENAMES = new Set(INDEX_FILES.concat(["package.json","package-lock.json"]));
+const MANIFEST_IDS = new Set(TRANSLATIONS.map(t=>t.id));
 const FETCH_INDEX_MS = 8000;
 const FETCH_JSON_MS = 120000;
 
@@ -365,8 +366,26 @@ async function loadAll(){
     const db=await openDb();
     const rows=await new Promise((res,rej)=>{ const tx=db.transaction(STORE,"readonly"); const r=tx.objectStore(STORE).getAll(); r.onsuccess=()=>res(r.result||[]); r.onerror=()=>rej(r.error); });
     db.close();
-    return (rows||[]).filter(d=>d && d.books && typeof d.books==="object" && d.id && d.id!=="__dirhandle__");
+    return (rows||[]).filter(d=>d && d.books && typeof d.books==="object" && d.id && d.id!=="__dirhandle__" && MANIFEST_IDS.has(d.id));
   }catch{ return []; }
+}
+async function deleteBible(id){
+  try{
+    const db=await openDb();
+    await new Promise((res,rej)=>{ const tx=db.transaction(STORE,"readwrite"); tx.objectStore(STORE).delete(id); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); });
+    db.close();
+  }catch{}
+}
+async function pruneStaleBibles(){
+  // 이전 버전 id(kordob, korhkjv 등 s 없는 구 id) 잔재 삭제
+  try{
+    const db=await openDb();
+    const keys=await new Promise((res,rej)=>{ const tx=db.transaction(STORE,"readonly"); const r=tx.objectStore(STORE).getAllKeys(); r.onsuccess=()=>res(r.result||[]); r.onerror=()=>rej(r.error); });
+    db.close();
+    for(const k of (keys||[])){
+      if(!MANIFEST_IDS.has(k)) await deleteBible(k);
+    }
+  }catch{}
 }
 async function saveDirHandle(handle){
   try{
@@ -386,9 +405,9 @@ async function loadDirHandle(){
 function isHttp(){ return location.protocol==="http:" || location.protocol==="https:"; }
 function defaultStatus(){
   if(!isHttp()){
-    return "로컬 파일로 연 경우에는 브라우저 보안 때문에 옆 JSON을 자동으로 열 수 없습니다. [폴더에서 모두 열기]를 한 번 허용하면 다음부터 같은 폴더를 다시 읽습니다. GitHub Pages에 올리면 자동으로 불러옵니다.";
+    return "로컬 파일 모드: 옆의 *.js 래퍼를 <script>로 자동 로드합니다. 실패하면 [폴더에서 모두 열기]를 한 번 허용하세요. GitHub Pages에서는 bibless.json+*.json을 fetch로 자동 로드합니다.";
   }
-  return "같은 폴더의 JSON을 자동으로 찾습니다. GitHub Pages에서는 bibles.json이 필요합니다. 없으면 [폴더에서 모두 열기]·[JSON 불러오기]를 사용하세요. 데이터 JSON은 포함되어 있지 않습니다.";
+  return "bibless.json 목록에 등록된 JSON만 자동으로 불러옵니다. 없으면 [폴더에서 모두 열기]·[JSON 불러오기]를 사용하세요. 데이터 JSON은 포함되어 있지 않습니다.";
 }
 function setLoad(msg){
   const el=$("loadbar");
@@ -399,8 +418,8 @@ function setLoad(msg){
 }
 
 const SAMPLE = {
-  id:"kornkrv",
-  translation:"kornkrv: 개역개정판 (미리보기 샘플)",
+  id:"kornkrvs",
+  translation:"kornkrvs: 개역개정판 (미리보기 샘플)",
   source:"sample",
   books:{
     "창세기":{
@@ -415,9 +434,9 @@ const SAMPLE = {
   }
 };
 
-const bibles = { kornkrv: SAMPLE };
+const bibles = { kornkrvs: SAMPLE };
 const extraMeta = [];
-let translationId="kornkrv", book="창세기", chapter="1", hl=null;
+let translationId="kornkrvs", book="창세기", chapter="1", hl=null;
 let showBook=true, showChapter=true, compareOn=false;
 let compareIds=[];
 let viewMode="chapter";
@@ -431,7 +450,7 @@ let skipAutoTab=false;
       if(typeof s.showBook==="boolean") showBook=s.showBook;
       if(typeof s.showChapter==="boolean") showChapter=s.showChapter;
       if(typeof s.compareOn==="boolean") compareOn=s.compareOn;
-      if(Array.isArray(s.compareIds)) compareIds=s.compareIds.filter(x=>typeof x==="string");
+      if(Array.isArray(s.compareIds)) compareIds=s.compareIds.filter(x=>typeof x==="string" && MANIFEST_IDS.has(x));
     }
   }catch{}
 })();
@@ -443,28 +462,20 @@ function saveDisp(){
   try{ localStorage.setItem("bible-reader:disp", JSON.stringify({showBook, showChapter, compareOn, compareIds})); }catch{}
 }
 function trLabel(id){
-  const t=TRANSLATIONS.find(x=>x.id===id) || extraMeta.find(x=>x.id===id);
+  const t=TRANSLATIONS.find(x=>x.id===id);
   if(t) return t.label;
-  const d=bibles[id];
-  return d ? (d.translation||id) : id;
+  return id;
 }
 function allMeta(){
-  const known=TRANSLATIONS.map(t=>({...t}));
-  const seen=new Set(known.map(t=>t.id));
-  for(const t of extraMeta){
-    if(!seen.has(t.id)){ known.push(t); seen.add(t.id); }
-  }
-  for(const id of Object.keys(bibles)){
-    if(!seen.has(id)){ known.push({id, label: trLabel(id), files:[]}); seen.add(id); }
-  }
-  return known;
+  // bibless.json(=TRANSLATIONS) 목록만 나열. 그 외 extra/IndexedDB 잔재 노출 금지.
+  return TRANSLATIONS.map(t=>({...t}));
 }
 function loadedRealIds(){
-  return Object.keys(bibles).filter(id => bibles[id] && bibles[id].source!=="sample");
+  return Object.keys(bibles).filter(id => MANIFEST_IDS.has(id) && bibles[id] && bibles[id].source!=="sample");
 }
 function loadedIds(){
   const real=loadedRealIds();
-  return real.length ? real : Object.keys(bibles);
+  return real.length ? real : Object.keys(bibles).filter(id=>MANIFEST_IDS.has(id));
 }
 function syncTogs(){
   const tb=$("tog-book"), tc=$("tog-ch"), tm=$("tog-cmp");
@@ -514,7 +525,7 @@ function fillCmp(){
     compareIds=others.slice();
     saveDisp();
   }
-  compareIds=compareIds.filter(id=>id!==translationId && bibles[id]);
+  compareIds=compareIds.filter(id=>id!==translationId && bibles[id] && MANIFEST_IDS.has(id));
   const box=$("cmp-chips");
   if(!box) return;
   box.innerHTML = others.map(id=>{
@@ -629,13 +640,12 @@ function shiftCh(dir){
 }
 
 function rememberMeta(doc){
-  if(TRANSLATIONS.some(t=>t.id===doc.id)) return;
-  if(!extraMeta.some(t=>t.id===doc.id)){
-    extraMeta.push({ id: doc.id, label: doc.translation || doc.id, files: [] });
-  }
+  // 매니페스트 외 메타 추가 금지 (드롭다운 오염 방지)
+  return;
 }
 
 async function ingest(docs, opts){
+  docs=(docs||[]).filter(d=>d && MANIFEST_IDS.has(d.id));
   if(!docs.length) return;
   const selectFirst = !opts || opts.selectFirst !== false;
   const prevId = translationId;
@@ -648,7 +658,9 @@ async function ingest(docs, opts){
   if(selectFirst){
     translationId=docs[0].id;
   } else if(prevWasSample || !bibles[prevId] || bibles[prevId].source==="sample"){
-    translationId = (bibles.kornkrv && bibles.kornkrv.source!=="sample") ? "kornkrv" : docs[0].id;
+    translationId = (bibles.kornkrvs && bibles.kornkrvs.source!=="sample") ? "kornkrvs" : docs[0].id;
+  } else if(!MANIFEST_IDS.has(prevId)){
+    translationId = docs[0].id;
   } else {
     translationId = prevId;
   }
@@ -999,23 +1011,19 @@ function extractManifestUrls(data, base){
   return urls;
 }
 async function listDirJson(dirUrl){
+  // 매니페스트(bibless.json 등)만 해석한다. HTML 디렉토리 목록에서 직접 href 수집 금지.
   const urls=new Set();
   try{
     const res=await fetchTimeout(dirUrl, FETCH_INDEX_MS, "no-cache");
     if(!res.ok) return urls;
-    const ct=res.headers.get("content-type")||"";
     const text=await res.text();
     const base=res.url || dirUrl;
-    const looksJson=/json/i.test(ct) || /\.json$/i.test(dirUrl) || /^\s*[\[{]/.test(text);
-    if(looksJson){
-      try{
-        const data=JSON.parse(text);
-        for(const u of extractManifestUrls(data, base)) urls.add(u);
-      }catch{}
-    }
-    if(/html/i.test(ct) || /^\s*</.test(text)){
-      for(const u of collectJsonHrefs(text, base)) urls.add(u);
-    }
+    const trimmed=(text||"").trim();
+    if(!trimmed || trimmed[0]!=="{" && trimmed[0]!=="[") return urls;
+    try{
+      const data=JSON.parse(trimmed);
+      for(const u of extractManifestUrls(data, base)) urls.add(u);
+    }catch{}
   }catch{}
   return urls;
 }
@@ -1032,24 +1040,72 @@ async function mapPool(items, limit, fn){
   await Promise.all(Array.from({length:n}, worker));
   return out;
 }
+function jsFileFor(t){ const f=(t.files&&t.files[0])||(t.id+".json"); return f.replace(/\.json$/i,".js"); }
+function loadScript(src){
+  return new Promise((res,rej)=>{
+    const s=document.createElement("script");
+    s.src=src; s.async=true;
+    s.onload=()=>res(true);
+    s.onerror=()=>rej(new Error("script load fail: "+src));
+    document.head.appendChild(s);
+  });
+}
+function docFromScriptData(id){
+  const raw=window.__BIBLE_DATA__ && window.__BIBLE_DATA__[id];
+  if(!raw || typeof raw!=="object") return null;
+  try{ const d=parseDoc(raw, id+".json"); d.id=id; d.source="script"; return d; }
+  catch{ return null; }
+}
+function harvestLegacyGlobals(){
+  // 구 래퍼(window.wooriData/window.kjvData) 하위호환: 있으면 매니페스트 id로 흡수
+  const out=[];
+  try{
+    if(window.wooriData && !window.__BIBLE_DATA__?.kordobs){
+      const d=parseDoc(window.wooriData, "kordobs.json"); d.id="kordobs"; d.source="script"; out.push(d);
+    }
+    if(window.kjvData && !window.__BIBLE_DATA__?.korhkjvs){
+      const d=parseDoc(window.kjvData, "korhkjvs.json"); d.id="korhkjvs"; d.source="script"; out.push(d);
+    }
+  }catch{}
+  return out;
+}
+async function discoverLocalScript(){
+  // file:// 전용: fetch가 막히므로 옆 *.js를 <script>로 로드 (GitHub Pages에서는 fetch 경로 사용)
+  if(isHttp()) return [];
+  if(new URLSearchParams(location.search).get("auto")==="0") return [];
+  if(loadedRealIds().filter(id=>MANIFEST_IDS.has(id)).length >= TRANSLATIONS.length) return [];
+  const found=[], seen=new Set();
+  let done=0;
+  setLoad(`로컬 성경 로드 중… 0/${TRANSLATIONS.length}`);
+  for(const t of TRANSLATIONS){
+    if(bibles[t.id] && bibles[t.id].source!=="sample"){ done+=1; continue; }
+    const rel="./"+jsFileFor(t);
+    try{ await loadScript(rel); }
+    catch{ try{ await loadScript("./bibles/"+jsFileFor(t)); }catch{} }
+    const doc=docFromScriptData(t.id);
+    done+=1;
+    setLoad(`로컬 성경 로드 중… ${done}/${TRANSLATIONS.length}`);
+    if(doc && !seen.has(doc.id)){ seen.add(doc.id); found.push(doc); }
+  }
+  for(const d of harvestLegacyGlobals()){
+    if(!seen.has(d.id) && MANIFEST_IDS.has(d.id)){ seen.add(d.id); found.push(d); }
+  }
+  setLoad("");
+  return found;
+}
 async function discoverLocalJson(){
+  // bibless.json(매니페스트)에 등록된 파일만 로드한다. 직접 추측 fetch 금지.
   if(!isHttp()) return [];
   if(new URLSearchParams(location.search).get("auto")==="0") return [];
   const bases=discoverBases();
   const urls=new Set();
-  setLoad("같은 폴더에서 JSON 목록을 찾는 중…");
+  setLoad("bibless.json에서 JSON 목록을 찾는 중…");
   const jobs=[];
   for(const dir of bases){
-    jobs.push(listDirJson(dir));
     for(const idx of INDEX_FILES) jobs.push(listDirJson(new URL(idx, dir).href));
   }
   const listed=await Promise.all(jobs);
   for(const set of listed) for(const u of set) urls.add(u);
-  for(const t of TRANSLATIONS){
-    for(const file of t.files){
-      for(const dir of bases) urls.add(new URL(file, dir).href);
-    }
-  }
   const unique=[...urls].filter(u=>isJsonName(filenameOf(u)));
   const found=[], seen=new Set();
   let done=0;
@@ -1067,9 +1123,11 @@ async function discoverLocalJson(){
 }
 
 function restorePos(params){
+  if(!MANIFEST_IDS.has(translationId)) translationId="kornkrvs";
   const pos=(()=>{try{return JSON.parse(localStorage.getItem("bible-reader:pos")||"null")}catch{return null}})();
-  if(params.get("tr") && bibles[params.get("tr")]) translationId=params.get("tr");
-  else if(pos && bibles[pos.translationId]) translationId=pos.translationId;
+  if(params.get("tr") && MANIFEST_IDS.has(params.get("tr")) && bibles[params.get("tr")]) translationId=params.get("tr");
+  else if(pos && MANIFEST_IDS.has(pos.translationId) && bibles[pos.translationId]) translationId=pos.translationId;
+  if(!MANIFEST_IDS.has(translationId)) translationId="kornkrvs";
   const d=bibles[translationId]||current();
   if(!d) return;
   const names=sortBooks(Object.keys(d.books));
@@ -1090,15 +1148,22 @@ function restorePos(params){
   }
   if(params.get("cmp")){
     compareOn=true;
-    compareIds=params.get("cmp").split(",").map(s=>s.trim()).filter(Boolean);
+    compareIds=params.get("cmp").split(",").map(s=>s.trim()).filter(s=>MANIFEST_IDS.has(s));
   }
   if(params.get("q")) $("q").value=params.get("q");
 
+  await pruneStaleBibles();
   const stored=await loadAll();
   for(const d of stored){
     rememberMeta(d);
     bibles[d.id]=d;
   }
+  // 메모리상 잔재(구 id)도 제거 + 현재 선택이 목록 밖이면 교정
+  for(const id of Object.keys(bibles)){
+    if(id!=="kornkrvs" && !MANIFEST_IDS.has(id)) delete bibles[id];
+  }
+  if(!MANIFEST_IDS.has(translationId)) translationId="kornkrvs";
+  compareIds=(compareIds||[]).filter(id=>MANIFEST_IDS.has(id) && id!==translationId);
   $("status").textContent = stored.length ? `저장된 ${stored.length}개 번역본을 불러왔습니다.` : defaultStatus();
   restorePos(params);
   render();
@@ -1113,14 +1178,16 @@ function restorePos(params){
   try{ await restoreSavedFolder(); }catch{}
 
   let found=[];
-  try{ found=await discoverLocalJson(); }catch(e){ setLoad(""); }
+  try{ found=isHttp() ? await discoverLocalJson() : await discoverLocalScript(); }catch(e){ setLoad(""); }
   if(found.length){
     await ingest(found, { selectFirst:false });
     if(params.get("view")==="search" && (params.get("q")||"").trim().length>=2){
       runSearch(params.get("q"), {openTab:false});
     }
-  } else if(isHttp() && !loadedRealIds().length){
-    $("status").textContent="미리보기 샘플입니다. HTML과 번역 JSON을 같은 폴더에 두면 자동으로 불러옵니다. GitHub Pages에서는 bibles.json을 함께 두세요.";
+  } else if(!loadedRealIds().length){
+    $("status").textContent = isHttp()
+      ? "미리보기 샘플입니다. bibless.json 목록에 등록된 번역만 자동으로 불러옵니다. GitHub Pages에서는 bibless.json을 함께 두세요."
+      : "로컬 파일 모드: 옆 *.js를 찾지 못했습니다. build_bible_js.py로 생성하거나 [폴더에서 모두 열기]로 JSON 8개를 여세요.";
   }
 })();
 </script>
