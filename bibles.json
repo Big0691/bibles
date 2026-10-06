@@ -1,8 +1,8 @@
 {
   "bibles": [
+    { "id": "korhkjvs", "label": "흠정역", "file": "Korhkjvs.json" },
     { "id": "kordobs", "label": "우리말성경", "file": "kordobs.json" },
     { "id": "koreasys", "label": "쉬운성경", "file": "koreasys.json" },
-    { "id": "korhkjvs", "label": "흠정역", "file": "Korhkjvs.json" },
     { "id": "korhrvs", "label": "개역한글", "file": "Korhrvs.json" },
     { "id": "korklbs", "label": "현대인", "file": "korklbs.json" },
     { "id": "kornkrvs", "label": "개역개정", "file": "kornkrvs.json" },
